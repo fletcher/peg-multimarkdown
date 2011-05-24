@@ -21,13 +21,13 @@ system.
 
 ## Mac OS X ##
 
-On the Mac, you can choose from using an installer to install the program and
-required library for you, or you can compile it yourself from scratch. If you
-know what that means, follow the instructions below in the Linux section.
-Otherwise, definitely go for the installer!
+On the Mac, you can [download an installer][downloads] to install the program and
+required library for you, or using a package manager to compile it from scratch
+for you. Using [MacPorts], you can install the program with the following command:
 
-Go to the [downloads] page to get the installer.
+    sudo port install multimarkdown
 
+If you don't know what any of that means, just [grab the installer][downloads].
 
 ## Windows ##
 
@@ -70,8 +70,12 @@ You then need to install a few libraries. I used [homebrew]:
 
 	brew install pkg-config glib gettext
 
-You can also use [fink] or something similar (though this caused some machine
-architecture incompatibilities):
+You can also use [MacPorts]:
+
+    port install pkgconfig glib gettext
+    
+Using [fink] is possible, though it may cause some machine architecture
+incompatibilities:
 
 	fink install glib2-shlibs glib2-dev
 
@@ -402,3 +406,4 @@ the GNU LGPL 2.1.
 [downloads]:			http://github.com/fletcher/peg-multimarkdown/downloads
 [GTK+]:					http://www.gtk.org/
 [homebrew]:				https://github.com/mxcl/homebrew
+[MacPorts]:             http://www.macports.org/
