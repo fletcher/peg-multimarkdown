@@ -72,7 +72,9 @@ int main(int argc, char * argv[]) {
     static gchar *opt_output = 0;
     static gchar *opt_to = 0;
     static gboolean opt_smart = TRUE;
+    static gboolean opt_no_smart = FALSE;
     static gboolean opt_notes = TRUE;
+    static gboolean opt_no_notes = FALSE;
     static gboolean opt_process_html = FALSE;
     static gboolean opt_filter_html = FALSE;
     static gboolean opt_filter_styles = FALSE;
@@ -98,8 +100,10 @@ int main(int argc, char * argv[]) {
     /* Options to active syntax extensions.  These appear separately in --help. */
     static GOptionEntry ext_entries[] =
     {
-      { "smart", 0, 0, G_OPTION_ARG_NONE, &opt_smart, "use smart typography extension", NULL },
-      { "notes", 0, 0, G_OPTION_ARG_NONE, &opt_notes, "use notes extension", NULL },
+      { "smart", 0, 0, G_OPTION_ARG_NONE, &opt_smart, "use smart typography extension (on by default)", NULL },
+      { "nosmart", 0, 0, G_OPTION_ARG_NONE, &opt_no_smart, "do not use smart typography extension", NULL },
+      { "notes", 0, 0, G_OPTION_ARG_NONE, &opt_notes, "use notes extension (on by default)", NULL },
+      { "nonotes", 0, 0, G_OPTION_ARG_NONE, &opt_no_notes, "do not use notes extension", NULL },
       { "process-html", 0, 0, G_OPTION_ARG_NONE, &opt_process_html, "process MultiMarkdown inside of raw HTML", NULL },
       { NULL }
     };
@@ -131,8 +135,12 @@ int main(int argc, char * argv[]) {
     extensions = 0;
     if (opt_allext)
         extensions = 0xFFFFFF;  /* turn on all extensions */
+    if (opt_no_smart)
+        opt_smart = FALSE;
     if (opt_smart)
         extensions = extensions | EXT_SMART;
+    if (opt_no_notes)
+        opt_notes = FALSE;
     if (opt_notes)
         extensions = extensions | EXT_NOTES;
     if (opt_process_html)
