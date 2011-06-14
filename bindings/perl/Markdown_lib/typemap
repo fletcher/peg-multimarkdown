@@ -1,5 +1,0 @@
-TYPEMAP
-Markdown_lib				T_PTROBJ
-Markdown_lib::Extensions	T_PTROBJ
-Markdown_lib::Format		T_PTROBJ
-
