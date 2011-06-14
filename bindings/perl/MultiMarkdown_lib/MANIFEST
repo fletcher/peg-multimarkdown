@@ -1,10 +1,8 @@
 Changes
 Makefile.PL
 MANIFEST
-Markdown_lib.xs
+XS.xs
 ppport.h
 README
-t/Markdown_lib.t
-fallback/const-c.inc
-fallback/const-xs.inc
-lib/Markdown_lib.pm
+t/XS.t
+lib/Text/MultiMarkdown/XS.pm

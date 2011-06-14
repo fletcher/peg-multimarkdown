@@ -8,10 +8,10 @@ chomp $inc;
 chomp $libs;
 
 WriteMakefile(
-    NAME              => 'Markdown_lib',
-    VERSION_FROM      => 'lib/Markdown_lib.pm', # finds $VERSION
+    NAME              => 'Text::MultiMarkdown::XS',
+    VERSION_FROM      => 'lib/Text/MultiMarkdown/XS.pm', # finds $VERSION
     PREREQ_PM         => {}, # e.g., Module::Name => 1.1
-    ABSTRACT_FROM     => 'lib/Markdown_lib.pm', # retrieve abstract from module
+    ABSTRACT_FROM     => 'lib/Text/MultiMarkdown/XS.pm', # retrieve abstract from module
     AUTHOR            => 'thinc <thinc@>',
     LIBS              => [$libs], # e.g., '-lm'
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'

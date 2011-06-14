@@ -1,7 +1,7 @@
 BOOT:
 {
   HV * stash;
-  stash = gv_stashpv( "Markdown_lib::Extensions", TRUE );
+  stash = gv_stashpv( "Text::MultiMarkdown::XS::Extensions", TRUE );
 
   newCONSTSUB( stash, "SMART",         newSViv( EXT_SMART         ) );
   newCONSTSUB( stash, "NOTES",         newSViv( EXT_NOTES         ) );
@@ -11,7 +11,7 @@ BOOT:
   newCONSTSUB( stash, "PROCESS_HTML",  newSViv( EXT_PROCESS_HTML  ) );
 
   HV * format;
-  format = gv_stashpv( "Markdown_lib::Format", TRUE );
+  format = gv_stashpv( "Text::MultiMarkdown::XS::Format", TRUE );
 
   newCONSTSUB( format, "HTML",     newSViv( HTML_FORMAT     ) );
   newCONSTSUB( format, "LATEX",    newSViv( LATEX_FORMAT    ) );
