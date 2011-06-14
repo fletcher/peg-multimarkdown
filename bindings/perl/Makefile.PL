@@ -15,24 +15,24 @@ WriteMakefile(
     AUTHOR            => 'thinc <thinc@>',
     LIBS              => [$libs], # e.g., '-lm'
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
-    INC               => "-I. $inc -I../../../", # e.g., '-I. -I/usr/include/other'
-    OBJECT            => '$(O_FILES) ../../../markdown_lib.o ../../../markdown_parser.o ../../../markdown_output.o', # link all the C files too
+    INC               => "-I. $inc -I../../", # e.g., '-I. -I/usr/include/other'
+    OBJECT            => '$(O_FILES) ../../markdown_lib.o ../../markdown_parser.o ../../markdown_output.o', # link all the C files too
     CCFLAGS           => '-Wall -ansi -O3 -fPIC',
 );
 
-# we need to tell it how to compile ../../../markdown_{lib,parser,output}.o
+# we need to tell it how to compile ../../markdown_{lib,parser,output}.o
 package MY;
 sub MY::postamble {
     return <<'MAKE_FRAG';
 
-../../../markdown_lib.o :
-	make -C ../../../ markdown_lib.o
+../../markdown_lib.o :
+	make -C ../../ markdown_lib.o
 
-../../../markdown_parser.o :
-	make -C ../../../ markdown_parser.o
+../../markdown_parser.o :
+	make -C ../../ markdown_parser.o
 
-../../../markdown_output.o :
-	make -C ../../../ markdown_output.o
+../../markdown_output.o :
+	make -C ../../ markdown_output.o
 
 MAKE_FRAG
 }
