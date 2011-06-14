@@ -3,11 +3,14 @@
 
 all: perl
 
-perl:
-	$(MAKE) -C perl/
+perl: perl/Makefile
+	$(MAKE) -C perl
 
-clean:
+perl/Makefile:
+	cd perl && perl Makefile.PL
+
+clean: perl/Makefile
 	$(MAKE) -C perl/ clean
 
-realclean:
+realclean: perl/Makefile
 	$(MAKE) -C perl/ realclean
