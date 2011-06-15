@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = '0.01';
+our $VERSION = '3.0.1';
 
 require XSLoader;
 XSLoader::load('Text::MultiMarkdown::XS', $VERSION);

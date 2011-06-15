@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More;
+use Test::More tests => 8;
 BEGIN { use_ok('Text::MultiMarkdown::XS') };
 
 my $text = '**bold text**';
@@ -67,5 +67,3 @@ my $text = '**bold text**';
     my $wanted = q{<p>this &#8211; is &#8216;single quoted&#8217; text</p>};
     is ( $html, $wanted, 'extensions can be a string' );
 }
-
-done_testing();

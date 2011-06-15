@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More;
+use Test::More tests => 18;
 BEGIN { use_ok('Text::MultiMarkdown::XS') };
 
 is( Text::MultiMarkdown::XS::sanity_check() , 12356894 , 'sanity check passes' );
@@ -36,5 +36,3 @@ my $mmd = '**bold text**';
     my $given = Text::MultiMarkdown::XS::to_string( $mmd, 0, Text::MultiMarkdown::XS::Format->LATEX );
     is ( $given, $wanted, 'conversion to latex works' );
 }
-
-done_testing();

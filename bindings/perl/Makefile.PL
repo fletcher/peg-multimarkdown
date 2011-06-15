@@ -15,8 +15,8 @@ WriteMakefile(
     AUTHOR            => 'thinc <thinc@>',
     LIBS              => [$libs], # e.g., '-lm'
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
-    INC               => "-I. $inc -I../../", # e.g., '-I. -I/usr/include/other'
-    OBJECT            => '$(O_FILES) ../../markdown_lib.o ../../markdown_parser.o ../../markdown_output.o', # link all the C files too
+    INC               => "-I. $inc -I./ext", # e.g., '-I. -I/usr/include/other'
+    OBJECT            => '$(O_FILES) ./ext/markdown_lib.o ./ext/markdown_parser.o ./ext/markdown_output.o', # link all the C files too
     CCFLAGS           => '-Wall -ansi -O3 -fPIC',
 );
 
@@ -25,14 +25,14 @@ package MY;
 sub MY::postamble {
     return <<'MAKE_FRAG';
 
-../../markdown_lib.o :
-	make -C ../../ markdown_lib.o
+./ext/markdown_lib.o :
+	make -C ./ext/ markdown_lib.o
 
-../../markdown_parser.o :
-	make -C ../../ markdown_parser.o
+./ext/markdown_parser.o :
+	make -C ./ext/ markdown_parser.o
 
-../../markdown_output.o :
-	make -C ../../ markdown_output.o
+./ext/markdown_output.o :
+	make -C ./ext/ markdown_output.o
 
 MAKE_FRAG
 }
