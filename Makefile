@@ -8,7 +8,7 @@ PROGRAM=multimarkdown
 # the i386 architecture, causing an error.  Can try adding -arch i686 to 
 # CFLAGS
 
-CFLAGS ?= -Wall -O3 -ansi
+CFLAGS ?= -Wall -O3 -ansi -fPIC
 
 OBJS=markdown_parser.o markdown_output.o markdown_lib.o
 PEGDIR=peg-0.1.4
@@ -32,14 +32,16 @@ clean:
 	rm -f markdown_parser.c $(PROGRAM) $(OBJS); \
 	make -C $(PEGDIR) clean; \
 	rm -rf mac_installer/Package_Root/usr/local/bin; \
-	rm mac_installer/Resources/*.html; \
-	rm windows_installer/README.txt; \
-	rm windows_installer/multimarkdown.exe; \
-	rm windows_installer/multimarkdown.xml.backup; \
-	rm windows_installer/LICENSE.html
+	rm -f mac_installer/Resources/*.html; \
+	rm -f windows_installer/README.txt; \
+	rm -f windows_installer/multimarkdown.exe; \
+	rm -f windows_installer/multimarkdown.xml.backup; \
+	rm -f windows_installer/LICENSE.html
+	make -C bindings/ clean
 
 distclean: clean
 	make -C $(PEGDIR) spotless
+	make -C bindings/ realclean
 
 test: $(PROGRAM)
 	cd MarkdownTest; \
