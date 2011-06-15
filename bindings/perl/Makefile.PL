@@ -1,8 +1,18 @@
-use 5.010000;
-use ExtUtils::MakeMaker;
+
+use lib qw(inc);
+use Devel::CheckLib;
 
 my $inc = `pkg-config --cflags glib-2.0`;
 my $libs = `pkg-config --libs glib-2.0`;
+
+check_lib_or_exit(
+    header => ['markdown_lib.h','glib.h'],
+    INC => "-I. $inc -I./ext",
+);
+
+
+use 5.010000;
+use ExtUtils::MakeMaker;
 
 chomp $inc;
 chomp $libs;

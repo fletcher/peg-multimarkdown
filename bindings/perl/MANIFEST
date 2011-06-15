@@ -1,3 +1,4 @@
+inc/Devel/CheckLib.pm
 const-xs.inc
 Changes
 Makefile.PL
