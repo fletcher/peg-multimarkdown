@@ -37,9 +37,11 @@ clean:
 	rm -f windows_installer/multimarkdown.exe; \
 	rm -f windows_installer/multimarkdown.xml.backup; \
 	rm -f windows_installer/LICENSE.html
+	make -C bindings/ clean
 
 distclean: clean
 	make -C $(PEGDIR) spotless
+	make -C bindings/ realclean
 
 test: $(PROGRAM)
 	cd MarkdownTest; \
