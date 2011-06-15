@@ -1,5 +1,0 @@
-TYPEMAP
-Text::MultiMarkdown::XS	T_PTROBJ
-Text::MultiMarkdown::XS::Extensions	T_PTROBJ
-Text::MultiMarkdown::XS::Format	T_PTROBJ
-

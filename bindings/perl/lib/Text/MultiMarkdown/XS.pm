@@ -10,71 +10,196 @@ our $VERSION = '0.01';
 require XSLoader;
 XSLoader::load('Text::MultiMarkdown::XS', $VERSION);
 
+sub new
+{
+    my ( $class, %p ) = @_;
+    $p{ext} ||= 0;
+    $p{output_format} ||= 0;
+
+    my $self =  bless \%p, $class;
+    $self->output( $p{output} ) if exists $p{output};
+    $self->add_extension( $p{extensions} ) if exists $p{extensions};
+
+    return $self;
+}
+
+sub markdown
+{
+    my ( $self, $text ) = @_;
+    return to_string( $text, $self->{ext}, $self->{output_format} );
+}
+
+sub output
+{
+    my ( $self, $output ) = @_;
+
+    my $format = Text::MultiMarkdown::XS::Format->HTML;
+    SWITCH: {
+        $output eq 'html'     && do { $format = Text::MultiMarkdown::XS::Format->HTML;     last SWITCH };
+        $output eq 'latex'    && do { $format = Text::MultiMarkdown::XS::Format->LATEX;    last SWITCH };
+        $output eq 'memoir'   && do { $format = Text::MultiMarkdown::XS::Format->MEMOIR;   last SWITCH };
+        $output eq 'beamer'   && do { $format = Text::MultiMarkdown::XS::Format->BEAMER;   last SWITCH };
+        $output eq 'opml'     && do { $format = Text::MultiMarkdown::XS::Format->OPML;     last SWITCH };
+        $output eq 'groff_mm' && do { $format = Text::MultiMarkdown::XS::Format->GROFF_MM; last SWITCH };
+        $output eq 'odf'      && do { $format = Text::MultiMarkdown::XS::Format->ODF;      last SWITCH };
+        $output eq 'odf_body' && do { $format = Text::MultiMarkdown::XS::Format->ODF_BODY; last SWITCH };
+    };
+
+    $self->{output_format} = $format;
+
+    return $self;
+}
+
+sub add_extension
+{
+    my ( $self, $extensions ) = @_;
+
+    if ( ref( $extensions ) eq q{} )
+    {
+        my @ex = split( q{ }, $extensions );
+        $extensions = \@ex;
+    }
+
+    my $ext = $self->{ext};
+    foreach my $e ( @{$extensions} )
+    {
+        SWITCH: {
+            $e eq 'smart'         && do { $ext |= Text::MultiMarkdown::XS::Extensions->SMART;         last SWITCH };
+            $e eq 'notes'         && do { $ext |= Text::MultiMarkdown::XS::Extensions->NOTES;         last SWITCH };
+            $e eq 'filter_html'   && do { $ext |= Text::MultiMarkdown::XS::Extensions->FILTER_HTML;   last SWITCH };
+            $e eq 'filter_styles' && do { $ext |= Text::MultiMarkdown::XS::Extensions->FILTER_STYLES; last SWITCH };
+            $e eq 'compatibility' && do { $ext |= Text::MultiMarkdown::XS::Extensions->COMPATIBILITY; last SWITCH };
+            $e eq 'process_html'  && do { $ext |= Text::MultiMarkdown::XS::Extensions->PROCESS_HTML;  last SWITCH };
+        };
+    }
+    $self->{ext} = $ext;
+
+    return $self;
+}
+
+sub remove_extension
+{
+    my ( $self, $extensions ) = @_;
+
+    my $ext = $self->{ext};
+
+    foreach my $e ( @{$extensions} )
+    {
+        SWITCH: {
+            $e eq 'smart'         && do { $ext ^= Text::MultiMarkdown::XS::Extensions->SMART;         last SWITCH };
+            $e eq 'notes'         && do { $ext ^= Text::MultiMarkdown::XS::Extensions->NOTES;         last SWITCH };
+            $e eq 'filter_html'   && do { $ext ^= Text::MultiMarkdown::XS::Extensions->FILTER_HTML;   last SWITCH };
+            $e eq 'filter_styles' && do { $ext ^= Text::MultiMarkdown::XS::Extensions->FILTER_STYLES; last SWITCH };
+            $e eq 'compatibility' && do { $ext ^= Text::MultiMarkdown::XS::Extensions->COMPATIBILITY; last SWITCH };
+            $e eq 'process_html'  && do { $ext ^= Text::MultiMarkdown::XS::Extensions->PROCESS_HTML;  last SWITCH };
+        };
+    }
+    $self->{ext} = $ext;
+
+    return $self;
+}
+
 1;
 __END__
 
 =head1 NAME
 
-Text::MultiMarkdown::XS - Perl extension for blah blah blah
+Text::MultiMarkdown::XS - an extension of the multimarkdown c library.
 
 =head1 SYNOPSIS
 
   use Text::MultiMarkdown::XS;
-  blah blah blah
+
+  my $m = Text::MultiMarkdown->new;
+  my $html = $m->markdown($text);
 
 =head1 DESCRIPTION
 
-Stub documentation for Text::MultiMarkdown::XS, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
+MultiMarkdown, or MMD, is a tool to help turn minimally marked-up plain text
+into well formatted documents, including HTML, PDF (by way of LaTeX),
+OPML, or OpenDocument (specifically, Flat OpenDocument or ‘.fodt’, which
+can in turn be converted into RTF, Microsoft Word, or virtually any other
+word-processing format).
 
-Blah blah blah.
+=head1 USAGE
 
-=head2 EXPORT
+=head2 new
 
-None by default.
+Create a new Text::MultiMarkdown::XS object.
 
-=head2 Exportable constants
+=over 4
 
-  BEAMER_FORMAT
-  EXT_COMPATIBILITY
-  EXT_FILTER_HTML
-  EXT_FILTER_STYLES
-  EXT_NOTES
-  EXT_PROCESS_HTML
-  EXT_SMART
-  GROFF_MM_FORMAT
-  HTML_FORMAT
-  LATEX_FORMAT
-  MEMOIR_FORMAT
-  ODF_BODY_FORMAT
-  ODF_FORMAT
-  OPML_FORMAT
+=item * C<output> (optional, default: html)
 
+Set the output format.  Valid options are html, latex, memoir, beamer, opml, groff_mm, odf, odf_body.
 
+example:
+
+  my $m = Text::MultiMarkdown::XS->new( output => 'latex' );
+
+=item * C<extensions> (options, default none)
+
+Set the valid extensions.  Valid options are smart, notes, filter_html, filter_styles, compatibility, process_html.
+
+example:
+
+  my $m = Text::MultiMarkdown::XS->new( extensions => 'smart notes' ); # add the smart and notes extensions.
+
+=head2 markdown
+
+Perform the conversion.  Returns the converted string.
+
+example:
+
+  my $html = $m->markdown($text);
+
+=head2 output
+
+Set the output format.  See C<new> for valid options.
+
+=head2 add_extension
+
+Add extra formatting extension(s).
+
+=head2 remove_extension
+
+Remove extra formatting extensions.
 
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
+For more information about (original) Markdown's syntax, see:
 
-If you have a mailing list set up for your module, mention it here.
+    http://daringfireball.net/projects/markdown/
 
-If you have a web site set up for your module, mention it here.
+This module implements MultiMarkdown, which is an extension to Markdown..
+
+The extension is documented at:
+
+    http://fletcherpenney.net/multimarkdown/
 
 =head1 AUTHOR
 
-thinc, E<lt>thinc@E<gt>
+Tom Heady <cpan@punch.net>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2011 by thinc
+Copyright (C) 2011 by Tom Heady
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.10.0 or,
-at your option, any later version of Perl 5 you may have available.
+This library is released under both the GPL and MIT licenses.
+You may pick the license that best fits your needs.
 
+peg-multimarkdown
+portions Copyright (c) 2010-2011 Fletcher T. Penney
+
+based on:
+markdown in c, implemented using PEG grammar
+Copyright (c) 2008-2011 John MacFarlane
+ODF output code (c) 2011 Fletcher T. Penney
+
+peg-markdown is released under both the GPL and MIT licenses.
+You may pick the license that best fits your needs.
+
+Additional MultiMarkdown files
+Copyright (c) 2005-2011 Fletcher T. Penney
 
 =cut

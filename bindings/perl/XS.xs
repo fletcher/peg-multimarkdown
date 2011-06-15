@@ -17,10 +17,7 @@ int
 sanity_check()
 
 char *
-markdown_to_string( text, extensions, output_format )
-    char * text
-    int extensions
-    int output_format
+markdown_to_string( char * text, int extensions, int output_format )
   CODE:
     RETVAL = markdown_to_string( text, extensions, output_format );
   OUTPUT:
