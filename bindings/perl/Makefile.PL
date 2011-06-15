@@ -1,33 +1,31 @@
 
 use lib qw(inc);
 use Devel::CheckLib;
+use ExtUtils::MakeMaker;
 
 my $inc = `pkg-config --cflags glib-2.0`;
 my $libs = `pkg-config --libs glib-2.0`;
+
+chomp $inc, $libs;
 
 check_lib_or_exit(
     header => ['markdown_lib.h','glib.h'],
     INC => "-I. $inc -I./ext",
 );
 
-
-use 5.010000;
-use ExtUtils::MakeMaker;
-
-chomp $inc;
-chomp $libs;
-
 WriteMakefile(
     NAME              => 'Text::MultiMarkdown::XS',
-    VERSION_FROM      => 'lib/Text/MultiMarkdown/XS.pm', # finds $VERSION
-    PREREQ_PM         => {}, # e.g., Module::Name => 1.1
-    ABSTRACT_FROM     => 'lib/Text/MultiMarkdown/XS.pm', # retrieve abstract from module
-    AUTHOR            => 'thinc <thinc@>',
-    LIBS              => [$libs], # e.g., '-lm'
-    DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
-    INC               => "-I. $inc -I./ext", # e.g., '-I. -I/usr/include/other'
-    OBJECT            => '$(O_FILES) ./ext/markdown_lib.o ./ext/markdown_parser.o ./ext/markdown_output.o', # link all the C files too
-    CCFLAGS           => '-Wall -ansi -O3 -fPIC',
+    VERSION_FROM      => 'lib/Text/MultiMarkdown/XS.pm',
+    PREREQ_PM         => {
+        'Test::Simple' => 0.44,
+    },
+    ABSTRACT_FROM     => 'lib/Text/MultiMarkdown/XS.pm',
+    AUTHOR            => 'Tom Heady (cpan@punch.net)',
+    LIBS              => [$libs],
+    DEFINE            => '',
+    INC               => "-I. $inc -I./ext",
+    OBJECT            => '$(O_FILES) ./ext/markdown_lib.o ./ext/markdown_parser.o ./ext/markdown_output.o',
+    CCFLAGS           => '-Wall -ansi -O3',
 );
 
 # we need to tell it how to compile ../../markdown_{lib,parser,output}.o
