@@ -145,6 +145,8 @@ example:
 
   my $m = Text::MultiMarkdown::XS->new( extensions => 'smart notes' ); # add the smart and notes extensions.
 
+=back
+
 =head2 markdown
 
 Perform the conversion.  Returns the converted string.
@@ -171,9 +173,8 @@ For more information about (original) Markdown's syntax, see:
 
     http://daringfireball.net/projects/markdown/
 
-This module implements MultiMarkdown, which is an extension to Markdown..
-
-The extension is documented at:
+This module implements MultiMarkdown, which is an extension to Markdown.
+Documentation may be found here:
 
     http://fletcherpenney.net/multimarkdown/
 
@@ -192,6 +193,7 @@ peg-multimarkdown
 portions Copyright (c) 2010-2011 Fletcher T. Penney
 
 based on:
+
 markdown in c, implemented using PEG grammar
 Copyright (c) 2008-2011 John MacFarlane
 ODF output code (c) 2011 Fletcher T. Penney
