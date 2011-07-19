@@ -21,7 +21,7 @@ $(LEG):
 	$(CC) -c `pkg-config --cflags glib-2.0` $(CFLAGS) -o $@ $<
 
 $(PROGRAM) : markdown.c $(OBJS)
-	$(CC) `pkg-config --cflags glib-2.0` `pkg-config --libs glib-2.0` $(CFLAGS) -o $@ $(OBJS) $<
+	$(CC)  $(CFLAGS) -o $@ $(OBJS) $< `pkg-config --cflags glib-2.0` `pkg-config --libs glib-2.0` 
 
 markdown_parser.c : markdown_parser.leg $(LEG) markdown_peg.h parsing_functions.c utility_functions.c
 	$(LEG) -o $@ $<
