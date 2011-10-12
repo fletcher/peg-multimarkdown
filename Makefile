@@ -153,7 +153,7 @@ docs: $(PROGRAM)
 	mkdir -p ../manual; \
 	../multimarkdown manual.txt > ../manual/index.html; \
 	../multimarkdown -b -t latex manual.txt; \
-	latexmk manual.tex; \
+	latexmk -pdf manual.tex; \
 	latexmk -c manual.tex; \
 	mv manual.pdf ../manual/mmd-manual.pdf; \
 	rm ../documentation/manual.t*;
