@@ -1,0 +1,52 @@
+% vim: set fileencoding=utf-8 sw=4 sts=4 ts=8 et :vim
+\documentclass[12pt,english]{article}
+\usepackage{multimarkdown}
+ 
+\begin{document}
+
+\section{First MarkDown block}
+
+\startmarkdown{baseheaderlevel=subsection}
+First line
+Second line 
+Third line
+
+# Title #
+
+Fourth line is a new paragraph, with **bold** and *italic* text.
+
+* bulleted item 1
+
+    1. subitem 
+    1. subitem
+    1. subitem
+
+* bulleted item 2
+    * subitem 
+    * subitem
+
+\stopmarkdown
+ 
+\section{Second MarkDown block}
+
+\startmarkdown{baseheaderlevel=subsection}
+
+The second markdown block, with baseheaderlevel=subsection.
+
+# Title #
+
+    Markdown: # Title #
+
+## Subtitle ##
+
+    Markdown: ## Subtitle ##
+
+\stopmarkdown
+
+\section{MarkDown block read from a file}
+
+\includemarkdown{example.mkd}{baseheaderlevel=subsection}
+
+\framebox{End of document.}
+
+\end{document}

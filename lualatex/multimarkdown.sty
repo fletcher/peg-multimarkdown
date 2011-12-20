@@ -1,0 +1,41 @@
+%%
+%% Process inline MultiMarkdown regions with LuaLaTeX
+%%
+%% Author:
+%%   Marko Mahnič
+%%   Visual Cognitive Systems Laboratory
+%%   Faculty of Computer and Information Science, University of Ljubljana
+%%
+%% Created: December 2011
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{multimarkdown}
+  [2011/12/20 v0.1 MultiMarkdown package for LuaLaTeX]
+
+\RequirePackage{luacode}
+\RequireLuaModule{multimarkdown}
+ 
+% \startmarkdown installs an input buffer processor that will
+% collect MarkDown lines into a Lua table. When the input processor
+% encounters a line that starts with \stopmarkdown it will
+% convert MarkDown to LaTeX and \input it into the buffer.
+\newcommand{\startmarkdown}[1]{%
+\luaexec{
+    multimarkdown.startmarkdown('#1')
+}}
+
+% \stopmarkdown is processed by the input buffer processor.
+% It should be placed on a line of its own. It won't be detected
+% if there is anything but whitespace before it on the same line.
+% Any text that comes after \stopmarkdown on the same line will be
+% discarded.
+\newcommand{\stopmarkdown}{%
+    \errmessage{Mismatched stopmarkdown}%
+}
+ 
+% \includemarkdown reads the MarkDown file named in #1, converts it to LaTeX
+% and inserts it into the buffer with \input.
+\newcommand{\includemarkdown}[2]{%
+\luaexec{
+    multimarkdown.includemarkdown('#1','#2')
+}}

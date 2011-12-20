@@ -1,0 +1,7 @@
+*.so
+*.dll
+*.aux
+*.log
+*.pdf
+test/*.lua
+test/*.sty
