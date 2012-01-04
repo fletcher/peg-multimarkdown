@@ -18,7 +18,14 @@ else
 	FINALNOTES=Build complete.
 endif
 	
-CFLAGS ?= -Wall -O3 -ansi -include GLibFacade.h -I ./ -D MD_USE_GET_OPT=1
+CFLAGS ?= -Wall -O3 -include GLibFacade.h -I ./ -D MD_USE_GET_OPT=1
+ifeq ($(UNAME), SunOS)
+	CC = gcc
+	# Use of <stdbool.h> is valid only in a c99 compilation environment
+	CFLAGS += --std=c99
+else
+	CFLAGS += -ansi
+endif
 
 OBJS=markdown_parser.o markdown_output.o markdown_lib.o GLibFacade.o
 PEGDIR=peg-0.1.4

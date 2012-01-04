@@ -4,6 +4,7 @@
  *	
  *	Created by Daniel Jalkut on 7/26/11.
  *  Modified by Fletcher T. Penney on 9/15/11.
+ *  Modified by Dan Lowe on 1/3/12.
  *	Copyright 2011 __MyCompanyName__. All rights reserved.
  */
 
@@ -26,7 +27,8 @@
  *		76a88d63d9519978/041a7d0570de2d48?lnk=raot
  */
 
-#ifdef __WIN32 
+/* Solaris and Windows do not provide vasprintf() or asprintf(). */
+#if defined(__WIN32) || (defined(__SVR4) && defined(__sun))
 int vasprintf( char **sptr, char *fmt, va_list argv ) 
 { 
     int wanted = vsnprintf( *sptr = NULL, 0, fmt, argv ); 
