@@ -140,4 +140,6 @@ char * extract_metadata_value(char *text, int extensions, char *key);
 char * metavalue_for_key(char *key, element *list);
 
 element * parse_markdown_for_opml(char *string, int extensions);
+
+element * element_for_attribute(char *querystring, element *list);
 #endif
