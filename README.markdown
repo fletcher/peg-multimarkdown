@@ -10,7 +10,7 @@ Base Header Level:	2
 
 [peg-multimarkdown] is an implementation of MultiMarkdown derived from John MacFarlane's [peg-markdown]. It makes use of a parsing expression grammar (PEG), and is written in C. It should compile for most any (major) operating system. 
 
-Thanks to work by Daniel Jalikut, MMD no longer requires GLib2 as a dependency. This should make it easier to compile on various operating systems. 
+Thanks to work by Daniel Jalkut, MMD no longer requires GLib2 as a dependency. This should make it easier to compile on various operating systems. 
 
 
 # Installation #
@@ -276,7 +276,7 @@ You would, of course, need to change the `xhtml header` metadata to point to you
 
 Thanks to John MacFarlane for [peg-markdown]. Obviously, this derivative work would not be possible without his work. Additionally, he was very gracious in giving me some pointers when I was getting started with trying to modify his software, and he continues to update peg-markdown with the various edge cases MultiMarkdown users have found.   Hopefully both programs are better as a result.
 
-Thanks to Daniel Jalikut for his work on enabling MultiMarkdown to run without relying on GLib2.  This makes it much more flexible! 
+Thanks to Daniel Jalkut for his work on enabling MultiMarkdown to run without relying on GLib2.  This makes it much more flexible! 
 
 Thanks to John Gruber for the original [Markdown]. 'Nuff said. 
 
