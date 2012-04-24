@@ -846,6 +846,7 @@ static void print_latex_element(GString *out, element *elt) {
     char *label;
     char *height;
     char *width;
+    char *scale;
 	char *upper;
 	int i;
     double floatnum;
@@ -938,13 +939,25 @@ static void print_latex_element(GString *out, element *elt) {
         /* Figure if we have height, width, neither */
         height = dimension_for_attribute("height", elt->contents.link->attr);
         width = dimension_for_attribute("width", elt->contents.link->attr);
+        scale = dimension_for_attribute("scale", elt->contents.link->attr);
         if (elt->key == IMAGEBLOCK) {
             g_string_append_printf(out, "\\begin{figure}[htbp]\n\\centering\n");
         }
         g_string_append_printf(out, "\\includegraphics[");
         if ((height == NULL) && (width == NULL)) {
-            /* No dimensions given */
-            g_string_append_printf(out,"keepaspectratio,width=\\textwidth,height=0.75\\textheight");
+            if(scale == NULL) {
+                /* No dimensions given */
+                g_string_append_printf(out,"keepaspectratio,width=\\textwidth,height=0.75\\textheight");
+            } else {
+                if (scale[strlen(scale)-1] == '%') {
+                    scale[strlen(scale)-1] = '\0';
+                    floatnum = strtod(scale, NULL);
+                    floatnum = floatnum/100;
+                    g_string_append_printf(out,"scale=%.4f", floatnum);
+                } else {
+                    g_string_append_printf(out,"scale=%s", scale);
+                }
+            }
         } else {
             /* at least one dimension given */
             if ((height != NULL) && (width != NULL)) {
