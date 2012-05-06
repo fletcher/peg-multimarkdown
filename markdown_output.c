@@ -425,7 +425,7 @@ static void print_html_element(GString *out, element *elt, bool obfuscate) {
         /* if contents.str == 0, then print note; else ignore, since this
          * is a note block that has been incorporated into the notes list */
         if (elt->contents.str == 0) {
-            if ( (elt->children->contents.str == 0) ){
+            if (elt->children->contents.str == 0) {
                 /* The referenced note has not been used before */
                 add_endnote(elt->children);
                 ++notenumber;
