@@ -1,12 +1,12 @@
 [submodule "MarkdownTest"]
 	path = MarkdownTest
-	url = git://github.com/fletcher/MMD-Test-Suite.git
+	url = https://github.com/fletcher/MMD-Test-Suite.git
 [submodule "Support"]
 	path = Support
-	url = git://github.com/fletcher/MMD-Support.git
+	url = https://github.com/fletcher/MMD-Support.git
 [submodule "documentation"]
 	path = documentation
-	url = git://github.com/fletcher/peg-multimarkdown.wiki.git
+	url = https://github.com/fletcher/peg-multimarkdown.wiki.git
 [submodule "samples"]
 	path = samples
-	url = git://github.com/fletcher/MultiMarkdown-Gallery.git
+	url = https://github.com/fletcher/MultiMarkdown-Gallery.git
