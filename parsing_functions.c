@@ -41,48 +41,93 @@ void free_element_list(element * elt) {
 /* free_element_contents - free element contents depending on type */
 static void free_element_contents(element elt) {
     switch (elt.key) {
-      case STR:
-      case SPACE:
-      case RAW:
-      case HTMLBLOCK:
-      case HTML:
-      case VERBATIM:
-      case CODE:
-      case NOTE:
-      case AUTOLABEL:
-      case CITATION:
-      case TERM:
-      case METAKEY:
-      case METAVALUE:
-      case TABLESEPARATOR:
-      case ATTRKEY:
-      case GLOSSARY:
-      case GLOSSARYTERM:
-      case NOTELABEL:
-      case CELLSPAN:
-      case EMDASH:
-      case ENDASH:
-      case GLOSSARYSORTKEY:
-      case MATHSPAN:
-        free(elt.contents.str);
-        elt.contents.str = NULL;
-        break;
-      case LINK:
-      case IMAGE:
-      case REFERENCE:
-        free(elt.contents.link->url);
-        elt.contents.link->url = NULL;
-        free(elt.contents.link->title);
-        elt.contents.link->title = NULL;
-        free_element_list(elt.contents.link->label);
-        free(elt.contents.link->identifier);
-        elt.contents.link->identifier = NULL;
-/*        free_element_list(elt.contents.link->attr);*/
-        free(elt.contents.link);
-        elt.contents.link = NULL;
-        break;
-      default:
-        ;
+        case STR:
+        case SPACE:
+        case RAW:
+        case HTMLBLOCK:
+        case HTML:
+        case VERBATIM:
+        case CODE:
+        case AUTOLABEL:
+        case CITATION:
+        case NOCITATION:
+        case TERM:
+        case METAKEY:
+        case METAVALUE:
+        case TABLESEPARATOR:
+        case ATTRKEY:
+        case ATTRVALUE:
+        case GLOSSARY:
+        case GLOSSARYTERM:
+        case GLOSSARYSORTKEY:
+        case NOTELABEL:
+        case CELLSPAN:
+        case MATHSPAN:
+            free(elt.contents.str);
+            elt.contents.str = NULL;
+            break;
+        case LINK:
+        case IMAGE:
+        case IMAGEBLOCK:
+        case REFERENCE:
+            free(elt.contents.link->url);
+            elt.contents.link->url = NULL;
+            free(elt.contents.link->title);
+            elt.contents.link->title = NULL;
+            free_element_list(elt.contents.link->label);
+            free(elt.contents.link->identifier);
+            elt.contents.link->identifier = NULL;
+            /*        free_element_list(elt.contents.link->attr);*/
+            free(elt.contents.link);
+            elt.contents.link = NULL;
+            break;
+        case TABLECELL:
+        case TABLECAPTION:
+        case TABLELABEL:
+        case EMPH:
+        case STRONG:
+        case LIST:
+        case METADATA:
+        case HEADINGSECTION:
+        case H1:
+        case H2:
+        case H3:
+        case H4:
+        case H5:
+        case H6:
+        case H7:
+        case PARA:
+        case APOSTROPHE:
+        case BLOCKQUOTE:
+        case BULLETLIST:
+        case ORDEREDLIST:
+        case LISTITEM:
+        case PLAIN:
+        case DOUBLEQUOTED:
+        case SINGLEQUOTED:
+        case ELLIPSIS:
+        case TABLE:
+        case TABLEHEAD:
+        case TABLEROW:
+        case TABLEBODY:
+        case EMDASH:
+        case ENDASH:
+        case LINEBREAK:
+        case FOOTER:
+        case HRULE:
+        case LOCATOR:
+        case DEFLIST:
+        case DEFINITION:
+            break;
+        case NOTE:
+            free(elt.contents.str);
+            elt.contents.str = NULL;
+            elt.children = NULL;    /* don't free children, since they are copied */
+            break;
+        default:
+            fprintf(stderr, "free_element encountered unknown element key = %d\n", elt.key);
+            exit(EXIT_FAILURE);
+            ;
     }
 }
 

@@ -106,7 +106,16 @@ static void ensureStringBufferCanHold(GString* baseString, size_t newStringSize)
 			newBufferSize *= kStringBufferGrowthMultiplier;
 		}
 		
-		baseString->str = realloc(baseString->str, newBufferSize);
+        char *temp;
+        temp = realloc(baseString->str, newBufferSize);
+        
+        if (temp == NULL) {
+            /* realloc failed */
+            fprintf(stderr, "error reallocating memory\n");
+
+            exit(1);
+        }
+		baseString->str = temp;
 		baseString->currentStringBufferSize = newBufferSize;
 	}
 }

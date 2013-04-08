@@ -61,6 +61,62 @@
 
  ***********************************************************************/
 
+/* print_tree - print tree of elements, for debugging only. */
+static void my_print_tree(element * elt, int indent) {
+    int i;
+    char * key;
+    while (elt != NULL) {
+        for (i = 0; i < indent; i++)
+            fputc(' ', stderr);
+        switch (elt->key) {
+            case LIST:               key = "LIST"; break;
+            case RAW:                key = "RAW"; break;
+            case SPACE:              key = "SPACE"; break;
+            case LINEBREAK:          key = "LINEBREAK"; break;
+            case ELLIPSIS:           key = "ELLIPSIS"; break;
+            case EMDASH:             key = "EMDASH"; break;
+            case ENDASH:             key = "ENDASH"; break;
+            case APOSTROPHE:         key = "APOSTROPHE"; break;
+            case SINGLEQUOTED:       key = "SINGLEQUOTED"; break;
+            case DOUBLEQUOTED:       key = "DOUBLEQUOTED"; break;
+            case STR:                key = "STR"; break;
+            case LINK:               key = "LINK"; break;
+            case IMAGE:              key = "IMAGE"; break;
+            case CODE:               key = "CODE"; break;
+            case HTML:               key = "HTML"; break;
+            case EMPH:               key = "EMPH"; break;
+            case STRONG:             key = "STRONG"; break;
+            case PLAIN:              key = "PLAIN"; break;
+            case PARA:               key = "PARA"; break;
+            case LISTITEM:           key = "LISTITEM"; break;
+            case BULLETLIST:         key = "BULLETLIST"; break;
+            case ORDEREDLIST:        key = "ORDEREDLIST"; break;
+            case H1:                 key = "H1"; break;
+            case H2:                 key = "H2"; break;
+            case H3:                 key = "H3"; break;
+            case H4:                 key = "H4"; break;
+            case H5:                 key = "H5"; break;
+            case H6:                 key = "H6"; break;
+            case BLOCKQUOTE:         key = "BLOCKQUOTE"; break;
+            case VERBATIM:           key = "VERBATIM"; break;
+            case HTMLBLOCK:          key = "HTMLBLOCK"; break;
+            case HRULE:              key = "HRULE"; break;
+            case REFERENCE:          key = "REFERENCE"; break;
+            case NOTE:               key = "NOTE"; break;
+			case NOTELABEL:			 key = "NOTELABEL"; break;
+            default:                 key = "?";
+        }
+        if ( elt->key == STR ) {
+            fprintf(stderr, "0x%p: %s   '%s'\n", (void *)elt, key, elt->contents.str);
+        } else {
+            fprintf(stderr, "0x%p: %s\n", (void *)elt, key);
+        }
+        if (elt->children)
+            my_print_tree(elt->children, indent + 4);
+        elt = elt->next;
+    }
+}
+
 %}
 
 Doc =       BOM? a:StartList ( Block { a = cons($$, a); } )*
@@ -957,7 +1013,8 @@ NoteReference = &{ extension(EXT_NOTES) }
                         $$ = mk_element(NOTE);
                         assert(match->children != NULL);
                         $$->children = match->children;
-                        $$->contents.str = 0;
+						free($$->contents.str);
+						$$->contents.str = 0;
                     } else {
                         char *s;
                         s = malloc(strlen(ref->contents.str) + 4);
@@ -965,6 +1022,7 @@ NoteReference = &{ extension(EXT_NOTES) }
                         $$ = mk_str(s);
                         free(s);
                     }
+					free_element(ref);
                 }
 
 RawNoteReference = ( "[^" | "[#" ) < ( !Newline !']' . )+ > ']'
@@ -1103,7 +1161,10 @@ AutoLabels = ( &{ !extension(EXT_COMPATIBILITY) && !extension(EXT_NO_LABELS)}
                 g_string_free(label,true);
                 /* TODO: this causes segfault when trying to use a footnote in the header */
                 /* I would like to fix it at some point */
-                /* free_element_list(b); */
+                /*fprintf(stderr,"try to free list\n");
+                /* my_print_tree(b,0);
+                free_element_list(b);
+                fprintf(stderr,"freed list\n"); */
             } | c:TableCaption {
                 GString *label = g_string_new("");
                 char *lab;

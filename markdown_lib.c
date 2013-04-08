@@ -98,6 +98,7 @@ static void print_tree(element * elt, int indent) {
             case HRULE:              key = "HRULE"; break;
             case REFERENCE:          key = "REFERENCE"; break;
             case NOTE:               key = "NOTE"; break;
+            case NOTELABEL:          key = "NOTELABEL"; break;
             default:                 key = "?";
         }
         if ( elt->key == STR ) {
@@ -221,6 +222,8 @@ char * extract_metadata_value(char *text, int extensions, char *key) {
     free_element_list(references);
     free_element_list(labels);
 
+    g_string_free(formatted_text, TRUE);
+    
     return value;
 }
 
@@ -254,6 +257,9 @@ gboolean has_metadata(char *text, int extensions) {
 
     free_element_list(references);
     free_element_list(labels);
+    
+    g_string_free(formatted_text, TRUE);
+    
     return hasMeta;
 }
 
