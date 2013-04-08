@@ -231,17 +231,10 @@ char * extract_metadata_value(char *text, int extensions, char *key) {
 gboolean has_metadata(char *text, int extensions) {
     gboolean hasMeta;
     element *result;
-    element *references;
-    element *notes;
-    element *labels;
     GString *formatted_text;
     
     formatted_text = preformat_text(text);
 
-    references = parse_references(formatted_text->str, extensions);
-    notes = parse_notes(formatted_text->str, extensions, references);
-    labels = parse_labels(formatted_text->str, extensions, references, notes);
-    
     result = parse_metadata_only(formatted_text->str, extensions);
 
     hasMeta = FALSE;
@@ -255,9 +248,6 @@ gboolean has_metadata(char *text, int extensions) {
         }
     }
 
-    free_element_list(references);
-    free_element_list(labels);
-    
     g_string_free(formatted_text, TRUE);
     
     return hasMeta;
