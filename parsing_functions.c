@@ -191,6 +191,8 @@ element * parse_markdown(char *string, int extensions, element *reference_list, 
     notes = note_list;
     labels = label_list;
 
+	parse_result = NULL;
+	
     oldcharbuf = charbuf;
     charbuf = string;
 
@@ -214,6 +216,8 @@ element * parse_markdown_with_metadata(char *string, int extensions, element *re
     references = reference_list;
     notes = note_list;
     labels = label_list;
+
+	parse_result = NULL;
 
     oldcharbuf = charbuf;
     charbuf = string;
@@ -241,10 +245,15 @@ element * parse_metadata_only(char *string, int extensions) {
     char *oldcharbuf;
     syntax_extensions = extensions;
 
+	parse_result = NULL;
+
     oldcharbuf = charbuf;
     charbuf = string;
 
+	fprintf(stderr, "start meta leg\n");
     yyparsefrom(yy_MetaDataOnly);
+
+	fprintf(stderr, "finish meta leg\n");
 
     charbuf = oldcharbuf;          /* restore charbuf to original value */
     return parse_result;
@@ -255,6 +264,8 @@ element * parse_markdown_for_opml(char *string, int extensions) {
 
     char *oldcharbuf;
     syntax_extensions = extensions;
+
+	parse_result = NULL;
 
     oldcharbuf = charbuf;
     charbuf = string;

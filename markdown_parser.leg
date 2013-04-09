@@ -133,15 +133,20 @@ DocWithMetaData = BOM? a:StartList b:StartList
 
 MetaData =  a:StartList !([A-Za-z]+ "://")
             (MetaDataKeyValue { a = cons($$, a); })+
-            { $$ = mk_list(LIST, a);
+            { 
+				fprintf(stderr, "MetaData recipe\n");
+				$$ = mk_list(LIST, a);
                 $$->key = METADATA;
             }
 
 MetaDataOnly = BOM? a:StartList
              ( MetaData { a = cons($$, a); } )?
-#             SkipBlock*
-			.*
-             { parse_result = reverse(a); }
+             { 
+				fprintf(stderr, "MetaDataOnly recipe\n");
+				fprintf(stderr, "try reverse\n");
+			 	parse_result = reverse(a);
+				fprintf(stderr, "did the reverse\n");
+			}
 
 MetaDataOnly2 = BOM? a:StartList
              ( MetaData { a = cons($$, a); } )?
