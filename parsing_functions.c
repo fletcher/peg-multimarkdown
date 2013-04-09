@@ -250,10 +250,7 @@ element * parse_metadata_only(char *string, int extensions) {
     oldcharbuf = charbuf;
     charbuf = string;
 
-	fprintf(stderr, "start meta leg\n");
     yyparsefrom(yy_MetaDataOnly);
-
-	fprintf(stderr, "finish meta leg\n");
 
     charbuf = oldcharbuf;          /* restore charbuf to original value */
     return parse_result;

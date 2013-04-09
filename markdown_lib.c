@@ -235,27 +235,17 @@ gboolean has_metadata(char *text, int extensions) {
     
     formatted_text = preformat_text(text);
 
-
-	fprintf(stderr, "parse for meta\n");
-
     result = parse_metadata_only(formatted_text->str, extensions);
-
-	fprintf(stderr, "finished parse\n");
 
     hasMeta = FALSE;
     
     if (result != NULL) {
         if (result->children != NULL) {
             hasMeta = TRUE;
-			fprintf(stderr, "we have metadata\n");
             free_element_list(result);
         } else {
-			fprintf(stderr, "we do not have metadata\n");
-            /* free_element(result); */
 			free_element_list(result);
         }
-    } else {
-		fprintf(stderr, "we did not get a result\n");
     }
 
     g_string_free(formatted_text, TRUE);
