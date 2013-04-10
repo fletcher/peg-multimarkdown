@@ -139,7 +139,7 @@ MetaData =  a:StartList !([A-Za-z]+ "://")
             }
 
 MetaDataOnly = BOM? a:StartList
-             ( MetaData { a = cons($$, a); } )?
+             ( MetaData { a = cons($$, a); } )? .*
              { 
 			 	parse_result = reverse(a);
 			}
