@@ -16,6 +16,7 @@ src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorM
 	<meta name="latexfooter" content="mmd-memoir-footer"/>
 </head>
 <body>
+
 <h2 id="introduction">Introduction</h2>
 
 <blockquote>
@@ -292,7 +293,8 @@ Gallery</a> and in the LaTeX Support files for ideas of what can be done.</p>
 
 <p>If you want to compile this yourself, you do it in the same way that you would
 install peg-markdown for Windows. The instructions are on the
-peg-multimarkdown <a href="https://github.com/fletcher/peg-multimarkdown/wiki/Building-for-Windows">wiki</a>. I
+peg-multimarkdown <a href="https://github.com/fletcher/peg-multimarkdown/wiki/User's-Manual">wiki</a>
+(https://github.com/fletcher/peg-multimarkdown/wiki/Building-for-Windows). I
 was able to compile for Windows fairly easily using Ubuntu linux following
 those instructions. I have not tried to actually compile on a Windows machine.</p>
 
@@ -493,7 +495,8 @@ and could be used in other circumstances as well.</p>
 <pre><code>multimarkdown --smart
 </code></pre>
 
-<p>Uses smart typography, similar to John Gruber&#8217;s <a href="http://daringfireball.net/projects/smartypants/">SmartyPants</a> program, which was included
+<p>Uses smart typography, similar to John Gruber&#8217;s [SmartyPants]
+(http://daringfireball.net/projects/smartypants/) program, which was included
 in MultiMarkdown 2.0. This extension is turned on by default in MultiMarkdown.</p>
 
 <pre><code>multimarkdown --notes
@@ -606,7 +609,8 @@ preview of the contents of a file. I have a Quick Look generator that allows
 the Finder to preview the contents of a MultiMarkdown text file (or OPML file)
 as an HTML preview.</p>
 
-<p>Available for download from <a href="https://github.com/fletcher/MMD-QuickLook/downloads">github</a>.</p>
+<p>Available for download from [github]
+(https://github.com/fletcher/MMD-QuickLook/downloads).</p>
 
 <h3 id="usingmultimarkdowninwindows">Using MultiMarkdown in Windows</h3>
 
@@ -671,11 +675,14 @@ MultiMarkdown.</p>
 <p>The resulting OPML file uses the headings to build the outline structure, and
 puts the text within each section as a not for the corresponding level of the
 outline using the <code>_note</code> attribute. <strong>NOTE</strong>: not all outliners support this
-attribute. On Mac OS X, <a href="http://www.omnigroup.com/applications/omnioutliner/">OmniOutliner</a> is a fabulous outliner
-that supports this field. If you&#8217;re into mind mapping software, <a href="http://www.ithoughts.co.uk/">iThoughts</a> works on the iPad/iPhone and supports import and
+attribute. On Mac OS X, <a href="http://www.omnigroup.com/applications/omnioutliner/">OmniOutliner</a>
+(http://www.omnigroup.com/applications/omnioutliner/) is a fabulous outliner
+that supports this field. If you&#8217;re into mind mapping software, [iThoughts]
+(http://www.ithoughts.co.uk/) works on the iPad/iPhone and supports import and
 export with OPML and the <code>_note</code> attribute.</p>
 
-<p>To convert from OPML, you can use various commands in from the <a href="https://github.com/fletcher/MMD-Support">MMD-Support</a> package:</p>
+<p>To convert from OPML, you can use various commands in from the <a href="https://github.com/fletcher/MMD-Support">MMD-Support</a>
+(https://github.com/fletcher/MMD-Support) package:</p>
 
 <pre><code>opml2HTML file.opml
 opml2mmd file.opml
@@ -1541,7 +1548,8 @@ books, reports, and other basic document formats.</p>
 <p>The <code>beamer</code> mode generates output designed to be compatible with the <a href="https://bitbucket.org/rivanvx/beamer/wiki/Home">beamer
 package</a>. This package allows you to easily create PDF slideshows (similar to
 Apple&#8217;s Keynote or Microsoft&#8217;s PowerPoint). I used it to create the &#8220;What is
-MultiMarkdown?&#8221; <a href="https://github.com/fletcher/MultiMarkdown-Gallery/raw/master/What-Is-MMD/what_is_mmd.pdf">slideshow</a>.</p>
+MultiMarkdown?&#8221; [slideshow]
+(https://github.com/fletcher/MultiMarkdown-Gallery/raw/master/What-Is-MMD/what_is_mmd.pdf).</p>
 
 <h3 id="opmlcustomization">OPML Customization</h3>
 
@@ -2281,7 +2289,8 @@ an <code>em-dash</code>.</p>
 it comes to using Table and Link syntax. The challenge comes in understanding
 how it looks <em>after</em> the conversion.</p>
 
-<p>The official MultiMarkdown text editor for Mac is <a href="http://multimarkdown.com/">MultiMarkdown Composer</a>, distributed by MultiMarkdown Software, LLC on the
+<p>The official MultiMarkdown text editor for Mac is [MultiMarkdown Composer]
+(http://multimarkdown.com/), distributed by MultiMarkdown Software, LLC on the
 Mac App Store. MultiMarkdown Composer is a text editor for Mac that is
 designed from the ground up around the MultiMarkdown syntax. It is designed to
 make writing in MultiMarkdown even easier than it already is, with automatic
@@ -2309,6 +2318,10 @@ with good accuracy.</p>
 
 <h4 id="caniusemultimarkdownonaniphoneipad">Can I use MultiMarkdown on an iPhone/iPad?</h4>
 
+<p>A version of MultiMarkdown Composer is in development for the iPhone and iPad. After the release of Composer 2.0 for the Mac, the iOS code needs to be updated to the new codebase. I do not have an estimated date on when this will be finished.</p>
+
+<p><a href="http://nebulousapps.net/">Nebulous Notes</a> now supports MultiMarkdown in addition to regular Markdown.</p>
+
 <p>There are a number of programs available for use on the iPhone and iPad that
 support regular Markdown, but not MultiMarkdown (yet!).</p>
 
@@ -2321,9 +2334,6 @@ simpler, but also very usable for learning Markdown.</p>
 for the iPad that includes a preview mode for Markdown. It will even preview
 MathJax equations if you include the proper metadata and a working MathJax
 installation!</p>
-
-<p>Now that MultiMarkdown is available in C (as of version 3.0), I would like to
-work on modifying it to work with iOS.</p>
 
 <h4 id="howdoitroubleshootanerror">How do I troubleshoot an error?</h4>
 
@@ -2338,8 +2348,9 @@ work on modifying it to work with iOS.</p>
 <li>did you read the User&#8217;s Manual? (Yes &#8212; I hate manuals too, but some
  aspects of MultiMarkdown can be rather complex, and that&#8217;s where most
  questions come up)</li>
-<li>is this a known issue on <a href="https://github.com/fletcher/peg-multimarkdown/issues">github</a>, or the <a href="http://groups.google.com/group/multimarkdown/">discussion
- list</a>?</li>
+<li>is this a known issue on [github]
+ (https://github.com/fletcher/peg-multimarkdown/issues), or the [discussion
+ list] (http://groups.google.com/group/multimarkdown/)?</li>
 </ul>
 
 <p>If you&#8217;re still having a problem, you first have to figure out what sort of
@@ -2371,7 +2382,8 @@ do the following:</p>
  expected to get</li>
 <li>if you&#8217;re convinced this is an issue with MultiMarkdown, use the issue
  tracker on <a href="https://github.com/fletcher/peg-multimarkdown/issues">github</a>,
- otherwise the <a href="http://groups.google.com/group/multimarkdown/">discussion list</a>.</li>
+ otherwise the [discussion list]
+ (http://groups.google.com/group/multimarkdown/).</li>
 </ul>
 
 <h4 id="divideandconquer">How do I find the source of an error?</h4>
@@ -2473,7 +2485,8 @@ discussion list and I will certainly review it.</p>
 
 <h5 id="whatisapeg">What is a PEG?</h5>
 
-<p>A PEG, or <a href="http://en.wikipedia.org/wiki/Parsing_expression_grammar">Parsing Expression Grammar</a> is a method of
+<p>A PEG, or [Parsing Expression Grammar]
+(http://en.wikipedia.org/wiki/Parsing_expression_grammar) is a method of
 describing a formal grammar to parse an input language. John MacFarlane used a
 PEG to create his <a href="https://github.com/jgm/peg-markdown">peg-markdown</a>. I then
 modified his work to create MultiMarkdown 3.0.</p>
@@ -2497,7 +2510,7 @@ handle images.</p>
 <p>A second approach was started, but never completed &#8212; the <code>xhtml2rtf.xslt</code>
 file was used to convert HTML to RTF via an XSL stylesheet. This approach was
 never finished, but could also be updated to work with MMD 3 generated HTML
-output by anyone who is interested</p>
+output.</p>
 
 <p>Because of all this, RTF &#8220;support&#8221; is no longer included with MMD. You can
 easily modify a shell script to pipe the HTML command through the <code>textutil
@@ -2509,10 +2522,6 @@ and then saved to a large variety of document formats.</p>
 <p>A better approach might be to stick with the <code>.fodt</code> format, or the more
 common version &#8212; <code>.odt</code>. But that&#8217;s more of a &#8220;political&#8221; opinion than a
 technical one.</p>
-
-<p>Finally, I have offered on numerous occasions to assist if anyone steps forward to implement RTF support. No takers so far.</p>
-
-<p>That said, <a href="http://multimarkdown.com/">MultiMarkdown Composer</a> uses Apple&#8217;s system calls to convert HTML to RTF directly (like <code>textutil</code> above). The results are not always great, but it&#8217;s easy to use.</p>
 
 <h2 id="acknowledgments">Acknowledgments</h2>
 
@@ -2596,6 +2605,7 @@ the GNU LGPL 2.1. Also, it relies on <a href="http://piumarta.com/software/peg/"
 
 </ol>
 </div>
+
 
 </body>
 </html>
