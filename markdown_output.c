@@ -987,7 +987,7 @@ static void print_latex_element(GString *out, element *elt) {
         if (elt->key == IMAGEBLOCK) {
            if (elt->contents.link->label != NULL) {
                 g_string_append_printf(out, "\\caption{");
-                print_latex_element_list(out, elt->contents.link->label);
+                g_string_append_printf(out, elt->contents.link->title);
                 g_string_append_printf(out, "}\n");
             }
             g_string_append_printf(out, "\\label{%s}\n", elt->contents.link->identifier);
