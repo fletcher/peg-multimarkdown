@@ -27,7 +27,7 @@
 
 /* preformat_text - allocate and copy text buffer while
  * performing tab expansion. */
-static GString *preformat_text(char *text) {
+GString *preformat_text(char *text) {
     GString *buf;
     char next_char;
     int charstotab;
@@ -115,7 +115,7 @@ static void print_tree(element * elt, int indent) {
 /* process_raw_blocks - traverses an element list, replacing any RAW elements with
  * the result of parsing them as markdown text, and recursing into the children
  * of parent elements.  The result should be a tree of elements without any RAWs. */
-static element * process_raw_blocks(element *input, int extensions, element *references, element *notes, element *labels) {
+element * process_raw_blocks(element *input, int extensions, element *references, element *notes, element *labels) {
     element *current = NULL;
     element *last_child = NULL;
     char *contents;
