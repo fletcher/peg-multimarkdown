@@ -2,6 +2,8 @@ Title:	peg-multimarkdown User's Guide
 Author:	Fletcher T. Penney  
 Base Header Level:	2  
 
+Note: This project has been deprecated in favor of [MultiMarkdown-6](https://github.com/fletcher/MultiMarkdown-6).
+
 # Introduction #
 
 [Markdown] is a simple markup language used to convert plain text into HTML. 
