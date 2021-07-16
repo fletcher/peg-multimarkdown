@@ -9,7 +9,6 @@ test.*
 testing/*
 
 *.o
-markdown_parser.c
 /markdown
 /multimarkdown
 /multimarkdown.exe
@@ -34,3 +33,9 @@ peg-0.1.4/leg
 
 *.pbxuser
 *.perspectivev3
+
+MultiMarkdown.xcodeproj/project.xcworkspace/
+MultiMarkdown.xcodeproj/xcuserdata/
+
+/peg-0.1.9/peg
+/peg-0.1.9/leg

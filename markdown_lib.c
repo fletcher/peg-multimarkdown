@@ -22,42 +22,20 @@
 #include <string.h>
 #include "markdown_peg.h"
 
-#define TABSTOP 4
 #define VERSION "3.7"
 
 /* preformat_text - allocate and copy text buffer while
  * performing tab expansion. */
-static GString *preformat_text(char *text) {
-    GString *buf;
-    char next_char;
-    int charstotab;
-
-    int len = 0;
-
-    buf = g_string_new("");
-
-    charstotab = TABSTOP;
-    while ((next_char = *text++) != '\0') {
-        switch (next_char) {
-        case '\t':
-            while (charstotab > 0)
-                g_string_append_c(buf, ' '), len++, charstotab--;
-            break;
-        case '\n':
-            g_string_append_c(buf, '\n'), len++, charstotab = TABSTOP;
-            break;
-        default:
-            g_string_append_c(buf, next_char), len++, charstotab--;
-        }
-        if (charstotab == 0)
-            charstotab = TABSTOP;
-    }
+GString *preformat_text(char *text) {
+    GString *buf = g_string_new("");
+	g_string_append(buf, text);
     g_string_append(buf, "\n\n");
-    return(buf);
+
+	return(buf);
 }
 
 /* print_tree - print tree of elements, for debugging only. */
-static void print_tree(element * elt, int indent) {
+void print_tree(element * elt, int indent) {
     int i;
     char * key;
     while (elt != NULL) {
@@ -94,6 +72,7 @@ static void print_tree(element * elt, int indent) {
             case H6:                 key = "H6"; break;
             case BLOCKQUOTE:         key = "BLOCKQUOTE"; break;
             case VERBATIM:           key = "VERBATIM"; break;
+			case CODEBLOCK:			 key = "CODEBLOCK"; break;
             case HTMLBLOCK:          key = "HTMLBLOCK"; break;
             case HRULE:              key = "HRULE"; break;
             case REFERENCE:          key = "REFERENCE"; break;
@@ -114,7 +93,7 @@ static void print_tree(element * elt, int indent) {
 /* process_raw_blocks - traverses an element list, replacing any RAW elements with
  * the result of parsing them as markdown text, and recursing into the children
  * of parent elements.  The result should be a tree of elements without any RAWs. */
-static element * process_raw_blocks(element *input, int extensions, element *references, element *notes, element *labels) {
+element * process_raw_blocks(element *input, int extensions, element *references, element *notes, element *labels) {
     element *current = NULL;
     element *last_child = NULL;
     char *contents;
@@ -122,14 +101,16 @@ static element * process_raw_blocks(element *input, int extensions, element *ref
 
     while (current != NULL) {
         if (current->key == RAW) {
+			char *nextString = current->contents.str;
+			
             /* \001 is used to indicate boundaries between nested lists when there
              * is no blank line.  We split the string by \001 and parse
              * each chunk separately. */
-            contents = strtok(current->contents.str, "\001");
+            contents = strsep(&nextString, "\001");
             current->key = LIST;
             current->children = parse_markdown(contents, extensions, references, notes, labels);
             last_child = current->children;
-            while ((contents = strtok(NULL, "\001"))) {
+            while ((contents = strsep(&nextString, "\001"))) {
                 while (last_child->next != NULL)
                     last_child = last_child->next;
                 last_child->next = parse_markdown(contents, extensions, references, notes, labels);

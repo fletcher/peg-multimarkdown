@@ -21,8 +21,13 @@ typedef int gboolean;
 typedef char gchar;
 
 /* This style of bool is used in shared source code */
-#define FALSE false
-#define TRUE true
+#ifndef FALSE
+    #define FALSE false
+#endif
+
+#ifndef TRUE
+    #define TRUE true
+#endif
 
 /* WE implement minimal mirror implementations of GLib's GString and GSList 
  * sufficient to cover the functionality required by MultiMarkdown.
@@ -38,8 +43,8 @@ typedef struct
 
 	/* Where in the str buffer will we add new characters */
 	/* or append new strings? */
-	int currentStringBufferSize;
-	int currentStringLength;
+	size_t currentStringBufferSize;
+	size_t currentStringLength;
 } GString;
 
 GString* g_string_new(char *startingString);

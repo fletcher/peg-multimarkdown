@@ -19,9 +19,14 @@
 
 #include <stdbool.h>
 #include <assert.h>
+
 #include "markdown_peg.h"
 #include "utility_functions.h"
+#include "parsing_functions.h"
 
+#pragma clang diagnostic ignored "-Wunreachable-code"
+
+#define YY_CTX_MEMBERS		markdown_parser_state *state;
 
 
 /**********************************************************************
@@ -39,11 +44,11 @@
 # define YY_DEBUG 1
 #endif
 
-#define YY_INPUT(buf, result, max_size)              \
+#define YY_INPUT(yy, buf, result, max_size)              \
 {                                                    \
-    int yyc;                                         \
-    if (charbuf && *charbuf != '\0') {               \
-        yyc= *charbuf++;                             \
+    int yyc = *(yy->state->charbuf);            \
+    if (yy->state->charbuf && *(yy->state->charbuf) != '\0') {               \
+        yy->state->charbuf ++;\
     } else {                                         \
         yyc= EOF;                                    \
     }                                                \
@@ -64,15 +69,15 @@
 %}
 
 Doc =       BOM? a:StartList ( Block { a = cons($$, a); } )*
-            { parse_result = reverse(a); }
+            { yy->state->parse_result = reverse(a); }
 
 DocWithMetaData = BOM? a:StartList b:StartList
-    ( &{ !extension(EXT_COMPATIBILITY) }
+    ( &{ !extension(yy->state, EXT_COMPATIBILITY) }
         &( MetaDataKey Sp ':' Sp (!Newline)) MetaData
             { a = cons($$, a); b = mk_element(FOOTER);})?
     ( Block { a = cons($$, a); } )*
     { if (b != NULL) a = cons(b, a);
-        parse_result = reverse(a);
+        yy->state->parse_result = reverse(a);
     }
 
 MetaData =  a:StartList !([A-Za-z]+ "://")
@@ -85,13 +90,13 @@ MetaDataOnly = BOM? a:StartList
              ( MetaData { a = cons($$, a); } )?
 #             SkipBlock*
 			.*
-             { parse_result = reverse(a); }
+             { yy->state->parse_result = reverse(a); }
 
 MetaDataOnly2 = BOM? a:StartList
              ( MetaData { a = cons($$, a); } )?
 #             SkipBlock*
 			.*
-             { parse_result = mk_list(LIST,a); }
+             { yy->state->parse_result = mk_list(LIST,a); }
 
 MetaDataKeyValue = a:MetaDataKey
             Sp ':' Sp b:MetaDataValue
@@ -123,8 +128,8 @@ MetaDataValue = a:StartList
 Block =     BlankLine*
             ( BlockQuote
             | Verbatim
-            | &{ !extension(EXT_COMPATIBILITY) } DefinitionList
-            | &{ !extension(EXT_COMPATIBILITY) } Glossary
+            | &{ !extension(yy->state, EXT_COMPATIBILITY) } DefinitionList
+            | &{ !extension(yy->state, EXT_COMPATIBILITY) } Glossary
             | Note
             | Reference
             | HorizontalRule
@@ -133,9 +138,10 @@ Block =     BlankLine*
             | BulletList
             | HtmlBlock
             | MarkdownHtmlBlock
-            | StyleBlock
-            | &{ !extension(EXT_COMPATIBILITY) } Table
-            | &{ !extension(EXT_COMPATIBILITY) } ImageBlock
+			| FencedCodeBlock
+			| StyleBlock
+            | &{ extension(yy->state, EXT_TABLES) } Table
+            | &{ !extension(yy->state, EXT_COMPATIBILITY) } ImageBlock
             | !(Sp? HtmlBlockOpenDiv) Para
             | Plain )
 
@@ -144,8 +150,8 @@ HeadingSectionBlock =
             !Heading
             ( BlockQuote
             | Verbatim
-            | &{ !extension(EXT_COMPATIBILITY) } DefinitionList
-            | &{ !extension(EXT_COMPATIBILITY) } Glossary
+            | &{ !extension(yy->state, EXT_COMPATIBILITY) } DefinitionList
+            | &{ !extension(yy->state, EXT_COMPATIBILITY) } Glossary
             | Note
             | Reference
             | HorizontalRule
@@ -153,24 +159,33 @@ HeadingSectionBlock =
             | BulletList
             | HtmlBlock
             | MarkdownHtmlBlock
+			| FencedCodeBlock
             | StyleBlock
-            | &{ !extension(EXT_COMPATIBILITY) } Table
-            | &{ !extension(EXT_COMPATIBILITY) } ImageBlock
+            | &{ extension(yy->state, EXT_TABLES) } Table
+            | &{ !extension(yy->state, EXT_COMPATIBILITY) } ImageBlock
             | !(Sp? HtmlBlockOpenDiv) Para
             | Plain )
 
-Para =      NonindentSpace a:Inlines BlankLine+
-            { $$ = a; $$->key = PARA; }
+Para =      s:CapturingNonindentSpace			{ }
+			a:Inlines
+			BlankLine+
+            {
+				if (s)
+					a->children = cons(s, a->children);
+
+				$$ = a;
+				$$->key = PARA;
+			}
 
 Plain =     a:Inlines
             { $$ = a; $$->key = PLAIN; }
 
-AtxInline = !Newline !( &{ !extension(EXT_COMPATIBILITY) } Sp AutoLabel Sp? '#'* Sp Newline) !(Sp? '#'* Sp Newline) Inline
+AtxInline = !Newline !( &{ !extension(yy->state, EXT_COMPATIBILITY) } Sp AutoLabel Sp? '#'* Sp Newline) !(Sp? '#'* Sp Newline) Inline
 
 AtxStart =  < ( "######" | "#####" | "####" | "###" | "##" | "#" ) >
-            { $$ = mk_element(H1 + (strlen(yytext) - 1)); }
+            { $$ = mk_element(H1 + (int)(strlen(yytext) - 1)); }
 
-AtxHeading = s:AtxStart Sp? a:StartList ( AtxInline { a = cons($$, a); } )+ ( Sp? b:AutoLabel { append_list(b,a);})? (Sp? '#'* Sp)?  Newline
+AtxHeading = s:AtxStart Sp? a:StartList ( AtxInline { a = cons($$, a); } (l:LineBreak { a = cons(l, a); })? )+ ( Sp? b:AutoLabel { append_list(b,a);})? (Sp? '#'* Sp)?  Newline
             { $$ = mk_list(s->key,a);
             free(s); }
 
@@ -181,11 +196,11 @@ SetextBottom1 = '='+ Newline
 SetextBottom2 = '-'+ Newline
 
 SetextHeading1 =  &(RawLine SetextBottom1)
-                  a:StartList ( !Endline !( &{ !extension(EXT_COMPATIBILITY) } Sp AutoLabel ) Inline { a = cons($$, a); } )+ ( Sp b:AutoLabel { append_list(b,a);} Sp? )? Sp? Newline
+                  a:StartList ( !Endline !( &{ !extension(yy->state, EXT_COMPATIBILITY) } Sp AutoLabel ) Inline { a = cons($$, a); } )+ ( Sp b:AutoLabel { append_list(b,a);} Sp? )? Sp? Newline
                   SetextBottom1 { $$ = mk_list(H1, a); }
 
 SetextHeading2 =  &(RawLine SetextBottom2)
-a:StartList ( !Endline !( &{ !extension(EXT_COMPATIBILITY) } Sp AutoLabel ) Inline { a = cons($$, a); } )+ ( Sp b:AutoLabel { append_list(b,a)} Sp? )? Sp? Newline
+a:StartList ( !Endline !( &{ !extension(yy->state, EXT_COMPATIBILITY) } Sp AutoLabel ) Inline { a = cons($$, a); } )+ ( Sp b:AutoLabel { append_list(b,a)} Sp? )? Sp? Newline
                   SetextBottom2 { $$ = mk_list(H2, a); }
 
 Heading = SetextHeading | AtxHeading
@@ -210,26 +225,37 @@ BlockQuoteRaw =  a:StartList
 
 NonblankIndentedLine = !BlankLine IndentedLine
 
-VerbatimChunk = a:StartList
-                ( BlankLine { a = cons(mk_str("\n"), a); } )*
+FirstVerbatimChunk = a:StartList
                 ( NonblankIndentedLine { a = cons($$, a); } )+
                 { $$ = mk_str_from_list(a, false); }
 
-Verbatim =     a:StartList ( VerbatimChunk { a = cons($$, a); } )+ BlankLine*
+FollowingVerbatimChunk = a:StartList
+                ( MagicBlankLine { a = cons(mk_str("\n"), a); } )*
+                ( NonblankIndentedLine { a = cons($$, a); } )+
+                { $$ = mk_str_from_list(a, false); }
+
+
+Verbatim =     a:StartList 
+				FirstVerbatimChunk { a = cons($$, a); }
+				( FollowingVerbatimChunk { a = cons($$, a); } )*
+				BlankLine*
                { $$ = mk_str_from_list(a, false);
                  $$->key = VERBATIM; }
 
 HorizontalRule = NonindentSpace
                  ( '*' Sp '*' Sp '*' (Sp '*')*
-                 | '-' Sp '-' Sp '-' (Sp '-')*
+                 | '-' Sp '-' Sp '-' Sp '-' (Sp '-')*
                  | '_' Sp '_' Sp '_' (Sp '_')*)
                  Sp Newline BlankLine+
                  { $$ = mk_element(HRULE); }
 
-Bullet = !HorizontalRule NonindentSpace ('+' | '*' | '-') Spacechar+
+Bullet = !HorizontalRule < NonindentSpace ('+' | '*' | '-') Spacechar > &(Spacechar*)
+		 {{ $$ = mk_str(yytext); }}
 
 BulletList = &Bullet (ListTight | ListLoose)
              { $$->key = BULLETLIST; }
+
+BulletOrEnum =	( Bullet | Enumerator )
 
 ListTight = a:StartList
             ( ListItemTight { a = cons($$, a); } )+
@@ -246,22 +272,27 @@ ListLoose = a:StartList
               } )+
             { $$ = mk_list(LIST, a); }
 
-ListItem =  ( Bullet | Enumerator )
+ListItem =  m:BulletOrEnum
             a:StartList
             ListBlock { a = cons($$, a); }
             ( ListContinuationBlock { a = cons($$, a); } )*
-            {  element *raw;
+            {  
+			   element *raw;
                raw = mk_str_from_list(a, false);
-               raw->key = RAW;
+               
+			   raw->key = RAW;
                $$ = mk_element(LISTITEM);
                $$->children = raw;
+
+			   $$->contents.str = string_from_element_list(m, true);
             }
 
+
 ListItemTight =
-            ( Bullet | Enumerator )
+            m:BulletOrEnum
             a:StartList
             ListBlock { a = cons($$, a); }
-            ( !BlankLine
+            ( !MagicBlankLine
               ListContinuationBlock { a = cons($$, a); } )*
             !ListContinuationBlock
             {  element *raw;
@@ -269,28 +300,34 @@ ListItemTight =
                raw->key = RAW;
                $$ = mk_element(LISTITEM);
                $$->children = raw;
+			   $$->contents.str = string_from_element_list(m, true);
             }
 
 ListBlock = a:StartList
-            !BlankLine Line { a = cons($$, a); }
+            !MagicBlankLine Line { a = cons($$, a); }
             ( ListBlockLine { a = cons($$, a); } )*
             { $$ = mk_str_from_list(a, false); }
 
 ListContinuationBlock = a:StartList
-                        ( < BlankLine* >
-                          {   if (strlen(yytext) == 0)
+                        ( < MagicBlankLine* >
+                          {   if (strlen(yytext) == 0) {
+									if (extension(yy->state, EXT_KEEP_MAGIC_BLANK_LINES))
+										a = cons(mk_str(yytext), a);
+
                                    a = cons(mk_str("\001"), a); /* block separator */
+							  }
                               else
                                    a = cons(mk_str(yytext), a); } )
                         ( Indent ListBlock { a = cons($$, a); } )+
                         {  $$ = mk_str_from_list(a, false); }
 
-Enumerator = NonindentSpace [0-9]+ '.' Spacechar+
+Enumerator = < NonindentSpace [0-9]+ '.' Spacechar > &(Spacechar*)
+			 {{ $$ = mk_str(yytext); }}
 
 OrderedList = &Enumerator (ListTight | ListLoose)
               { $$->key = ORDEREDLIST; }
 
-ListBlockLine = !BlankLine
+ListBlockLine = !MagicBlankLine
                 !( Indent? (Bullet | Enumerator) )
                 !HorizontalRule
                 OptionallyIndentedLine
@@ -515,13 +552,13 @@ HtmlBlockInTags = HtmlBlockAddress
                 | HtmlBlockTr
                 | HtmlBlockScript
 
-HtmlBlock = !MarkdownHtmlTagOpen < ( HtmlBlockInTags | HtmlComment | HtmlBlockSelfClosing ) >
+HtmlBlock = !MarkdownHtmlTagOpen < ( HtmlBlockInTags | HtmlComment | HtmlBlockSelfClosing ) > 
             BlankLine+
-            {   if (extension(EXT_FILTER_HTML)) {
+            {   if (extension(yy->state, EXT_FILTER_HTML)) {
                     $$ = mk_list(LIST, NULL);
                 } else {
                     $$ = mk_str(yytext);
-                    if ( extension(EXT_PROCESS_HTML)) $$->key = RAW;
+                    if ( extension(yy->state, EXT_PROCESS_HTML)) $$->key = RAW;
                         else $$->key = HTMLBLOCK;
                 }
             }
@@ -531,6 +568,38 @@ MarkdownHtmlBlock = &MarkdownHtmlTagOpen < ( HtmlBlockInTags | HtmlComment | Htm
             {       $$ = mk_str(yytext);
                     $$->key = RAW;
             }
+
+FencedCodeBlock =   indentation: FencedCodeBlockPreceedingIndentation
+
+					@{ const char *openingDelimiterStart = current_input_position(yy->state, yy->__pos, yy->__limit); }
+				    FencedCodeBlockMarker
+				    @{ size_t openingDelimiterLength = offset_to_current_position(openingDelimiterStart, yy->state, yy->__pos, yy->__limit); }
+
+					language:FencedCodeBlockLanguage Newline
+
+					<(
+						!( Newline?
+							FencedCodeBlockIndentation
+							@{ const char *closingDelimiterStart = current_input_position(yy->state, yy->__pos, yy->__limit); }
+							FencedCodeBlockMarker
+							@{ size_t closingDelimiterLength = offset_to_current_position(closingDelimiterStart, yy->state, yy->__pos, yy->__limit); }
+
+					 		&{ (openingDelimiterLength == closingDelimiterLength) && !strncmp(openingDelimiterStart, closingDelimiterStart, openingDelimiterLength) }
+					    	Sp (Newline | Eof)
+						)
+					.)*>
+
+					Newline? FencedCodeBlockIndentation FencedCodeBlockMarker Sp
+				  	BlankLine+
+				  {
+					$$ = mk_codeblock(yytext, language->contents.str, strlen(indentation->contents.str));
+				  }
+
+FencedCodeBlockPreceedingIndentation = <FencedCodeBlockIndentation> { $$ = mk_str(yytext); }
+FencedCodeBlockIndentation = Spacechar? Spacechar? Spacechar?
+FencedCodeBlockMarker = (("```" "`"*) | ("~~~" "~"*))
+
+FencedCodeBlockLanguage = < ([^\n])* > { $$ = mk_str(yytext); }
 
 HtmlBlockSelfClosing = '<' Spnl HtmlBlockType Spnl HtmlAttribute* '/' Spnl '>'
 
@@ -546,7 +615,7 @@ StyleClose =    '<' Spnl '/' ("style" | "STYLE") Spnl '>'
 InStyleTags =   StyleOpen (!StyleClose .)* StyleClose
 StyleBlock =    < InStyleTags >
                 BlankLine*
-                {   if (extension(EXT_FILTER_STYLES)) {
+                {   if (extension(yy->state, EXT_FILTER_STYLES)) {
                         $$ = mk_list(LIST, NULL);
                     } else {
                         $$ = mk_str(yytext);
@@ -558,15 +627,15 @@ Inlines  =  a:StartList ( !Endline Inline { a = cons($$, a); }
                         | c:Endline &Inline { a = cons(c, a); } )+ Endline?
             { $$ = mk_list(LIST, a); }
 
-Inline  = &{ check_timeout() }
+Inline  = &{ check_timeout(yy->state) }
         Str
-        | &{ !extension(EXT_COMPATIBILITY) } MathSpan
+        | &{ !extension(yy->state, EXT_COMPATIBILITY) } MathSpan
         | Endline
         | UlOrStarLine
         | Space
         | Strong
         | Emph
-        | &{ !extension(EXT_COMPATIBILITY) } CitationReference
+        | &{ !extension(yy->state, EXT_COMPATIBILITY) } CitationReference
         | Image
         | Link
         | NoteReference
@@ -575,12 +644,27 @@ Inline  = &{ check_timeout() }
         | MarkdownHtmlTagOpen
         | RawHtml
         | Entity
-        | EscapedChar
+        | &{ !extension(yy->state, EXT_KEEP_ESCAPES) }EscapedChar
+        | &{ extension(yy->state, EXT_KEEP_ESCAPES) }KeptEscapedChar		
         | Smart
         | Symbol
 
-Space = Spacechar+
-        { $$ = mk_str(" ");
+Space = < Spacechar+ >
+        {
+			if (extension(yy->state, EXT_KEEP_WHITESPACES))
+				$$ = mk_str(yytext);
+			else
+				$$ = mk_str(" ");
+
+          $$->key = SPACE; }
+
+OptionalSpace = < Spacechar* >
+        {
+			if (extension(yy->state, EXT_KEEP_WHITESPACES))
+				$$ = mk_str(yytext);
+			else
+				$$ = mk_str(" ");
+
           $$->key = SPACE; }
 
 Str = a:StartList < NormalChar+ > { a = cons(mk_str(yytext), a); }
@@ -590,11 +674,14 @@ Str = a:StartList < NormalChar+ > { a = cons(mk_str(yytext), a); }
 StrChunk = < (NormalChar | '_'+ &Alphanumeric)+ > { $$ = mk_str(yytext); } |
            AposChunk
 
-AposChunk = &{ extension(EXT_SMART) } '\'' &Alphanumeric
+AposChunk = &{ extension(yy->state, EXT_SMART) } '\'' &Alphanumeric
       { $$ = mk_element(APOSTROPHE); }
 
 EscapedChar =   '\\' !Newline < [-\\`|*_{}[\]()#+.!><] >
                 { $$ = mk_str(yytext); }
+
+KeptEscapedChar =   < '\\' !Newline [-\\`|*_{}[\]()#+.!><] >
+					{ $$ = mk_str(yytext); }
 
 Entity =    ( HexEntity | DecEntity | CharEntity )
             { $$ = mk_str(yytext); $$->key = HTML; }
@@ -631,7 +718,9 @@ EmphStar =  '*' !Whitespace
             | b:StrongStar  { a = cons(b, a); }
             )+
             '*'
-            { $$ = mk_list(EMPH, a); }
+            { $$ = mk_list(EMPH, a); 
+			  $$->contents.str = "*";
+			}
 
 EmphUl =    '_' !Whitespace
             a:StartList
@@ -639,7 +728,9 @@ EmphUl =    '_' !Whitespace
             | b:StrongUl  { a = cons(b, a); }
             )+
             '_'
-            { $$ = mk_list(EMPH, a); }
+            { $$ = mk_list(EMPH, a); 
+			  $$->contents.str = "_";
+			}
 
 Strong = StrongStar | StrongUl
 
@@ -647,13 +738,17 @@ StrongStar =    "**" !Whitespace
                 a:StartList
                 ( !"**" b:Inline { a = cons(b, a); })+
                 "**"
-                { $$ = mk_list(STRONG, a); }
+                { $$ = mk_list(STRONG, a);
+				  $$->contents.str = "**";
+				}
 
 StrongUl   =    "__" !Whitespace
                 a:StartList
                 ( !"__" b:Inline { a = cons(b, a); })+
                 "__"
-                { $$ = mk_list(STRONG, a); }
+                { $$ = mk_list(STRONG, a); 
+				  $$->contents.str = "__";
+				}
 
 
 ImageBlock = Image Sp Newline BlankLine+
@@ -672,14 +767,14 @@ Link =  ExplicitLink | ReferenceLink | AutoLink
 
 ReferenceLink = ReferenceLinkDouble | ReferenceLinkSingle
 
-ReferenceLinkDouble =  a:Label < Spnl > !"[]" b:Label
+ReferenceLinkDouble =  a:Label s:OptionalSpace !"[]" b:Label
                        {   link match;
-                           if (find_reference(&match, b->children)) {
+                           if (find_reference(yy->state, &match, b->children)) {
                                $$ = mk_link(a->children, match.url, match.title, match.attr, match.identifier);
                                free(a);
                                free_element_list(b);
-                           } else if ( !extension(EXT_COMPATIBILITY) && 
-                            find_label(&match, b->children)) {
+                           } else if ( !extension(yy->state, EXT_COMPATIBILITY) &&
+                            find_label(yy->state, &match, b->children)) {
                                 GString *text = g_string_new("");
                                 print_raw_element_list(text, b->children);
                                 char *lab = label_from_string(text->str,0);
@@ -694,18 +789,18 @@ ReferenceLinkDouble =  a:Label < Spnl > !"[]" b:Label
                             } else {
                                element *result;
                                result = mk_element(LIST);
-                               result->children = cons(mk_str("["), cons(a, cons(mk_str("]"), cons(mk_str("["), cons(b, mk_str("]"))))));
+                               result->children = cons(mk_str("["), cons(a, cons(mk_str("]"), cons(s, cons(mk_str("["), cons(b, mk_str("]")))))));
                                $$ = result;
                            }
                        }
 
 ReferenceLinkSingle =  a:Label < (Spnl "[]")? >
                        {   link match;
-                           if (find_reference(&match, a->children)) {
+                           if (find_reference(yy->state, &match, a->children)) {
                                $$ = mk_link(a->children, match.url, match.title, match.attr, match.identifier);
                                free(a);
-                           } else if ( !extension(EXT_COMPATIBILITY) && 
-                            find_label(&match, a->children)) {
+                           } else if ( !extension(yy->state, EXT_COMPATIBILITY) &&
+                            find_label(yy->state, &match, a->children)) {
                                 GString *text = g_string_new("");
                                 print_raw_element_list(text, a->children);
                                 char *lab = label_from_string(text->str,0);
@@ -724,9 +819,9 @@ ReferenceLinkSingle =  a:Label < (Spnl "[]")? >
                            }
                        }
 
-ExplicitLink =  l:Label '(' Sp s:Source Spnl t:Title Sp ')'
+ExplicitLink =  a:StartList l:Label '(' Sp s:Source Spnl t:Title ( &{ !extension(yy->state, EXT_COMPATIBILITY) || extension(yy->state, EXT_LINK_ATTRIBUTES) } (Attributes { a = cons($$,a);})? )? Sp ')'
                 {
-                    $$ = mk_link(l->children, s->contents.str, t->contents.str, NULL, "");
+					$$ = mk_link(l->children, s->contents.str, t->contents.str, a ? a->children : NULL, "");
                     free_element(s);
                     free_element(t);
                     free(l);
@@ -740,9 +835,10 @@ SourceContents = ( ( !'(' !')' !'>' Nonspacechar )+ | '(' SourceContents ')')*
 Title = ( TitleSingle | TitleDouble | < "" > )
         { $$ = mk_str(yytext); }
 
-TitleSingle = '\'' < ( !( '\'' Sp ( ')' | Newline ) ) . )* > '\''
+TitleSingle = '\'' < ( !( '\'' Sp ( ')' | Newline | (&{ !extension(yy->state, EXT_COMPATIBILITY) || extension(yy->state, EXT_LINK_ATTRIBUTES) } AlphanumericAscii+ '=' )) ) . )* > '\''
 
-TitleDouble = '"' < ( !( '"' Sp ( ')' | Newline ) ) . )* > '"'
+TitleDouble = '"' < ( !( '"' Sp ( ')' | Newline | (&{ !extension(yy->state, EXT_COMPATIBILITY) || extension(yy->state, EXT_LINK_ATTRIBUTES) } AlphanumericAscii+ '=' )) ) . )* > '"'
+
 
 AutoLink = AutoLinkUrl | AutoLinkEmail
 
@@ -758,9 +854,9 @@ AutoLinkEmail = '<' ( "mailto:" )? < [-A-Za-z0-9+_./!%~$]+ '@' ( !Newline !'>' .
 
 Reference = a:StartList NonindentSpace !"[]" l:Label ':' Spnl s:RefSrc
         t:RefTitle
-        ( &{ !extension(EXT_COMPATIBILITY) } 
+        ( &{ !extension(yy->state, EXT_COMPATIBILITY) || extension(yy->state, EXT_LINK_ATTRIBUTES) }
             (Attributes { a = cons($$,a);})? )?
-        BlankLine+
+        MagicBlankLine+
         { 
             char *label;
             GString *text = g_string_new("");
@@ -805,11 +901,11 @@ AttrValue = (QuotedValue | UnQuotedValue)
             $$->key = ATTRVALUE;
         }
 
-QuotedValue = '"' < (!'"' .)* > '"'
+QuotedValue = '"' < ("\\\"" | (!'"' .))* > '"'
 
-UnQuotedValue = < (AlphanumericAscii | '.')+ >
+UnQuotedValue = < (AlphanumericAscii | '.' | '%')+ >
 
-Label = '[' !'[' ( !'^' !'#' &{ extension(EXT_NOTES) } | &. &{ !extension(EXT_NOTES) } )
+Label = '[' !'[' ( !'^' !'#' &{ extension(yy->state, EXT_NOTES) } | &. &{ !extension(yy->state, EXT_NOTES) } )
         a:StartList
         ( !']' Inline { a = cons($$, a); } )*
         ']'
@@ -826,17 +922,17 @@ RefTitle =  ( RefTitleSingle | RefTitleDouble | RefTitleParens | EmptyTitle )
 EmptyTitle = < "" >
 
 RefTitleSingle = Spnl '\'' < ( !( '\'' Sp Newline | Newline |
-    &{ !extension(EXT_COMPATIBILITY) } '\'' Sp AlphanumericAscii+ '=' ) . )* > '\''
+    &{ !extension(yy->state, EXT_COMPATIBILITY) || extension(yy->state, EXT_LINK_ATTRIBUTES) } '\'' Sp AlphanumericAscii+ '=' ) . )* > '\''
 
 RefTitleDouble = Spnl '"' < ( !('"' Sp Newline | Newline |
-    &{ !extension(EXT_COMPATIBILITY) } '"' Sp AlphanumericAscii+ '=' ) . )* > '"'
+    &{ !extension(yy->state, EXT_COMPATIBILITY) || extension(yy->state, EXT_LINK_ATTRIBUTES) } '"' Sp AlphanumericAscii+ '=' ) . )* > '"'
 
 RefTitleParens = Spnl '(' < ( !(')' Sp Newline | Newline |
-    &{ !extension(EXT_COMPATIBILITY) } ')' Sp AlphanumericAscii+ '=' ) . )* > ')'
+    &{ !extension(yy->state, EXT_COMPATIBILITY) || extension(yy->state, EXT_LINK_ATTRIBUTES) } ')' Sp AlphanumericAscii+ '=' ) . )* > ')'
 
 References = a:StartList
              ( b:Reference { a = cons(b, a); } | SkipBlock )*
-             { references = reverse(a); }
+             { yy->state->references = reverse(a); }
 
 Ticks1 = "`" !'`'
 Ticks2 = "``" !'`'
@@ -853,7 +949,7 @@ Code = ( Ticks1 Sp < ( ( !'`' Nonspacechar )+ | !Ticks1 '`'+ | !( Sp Ticks1 ) ( 
        { $$ = mk_str(yytext); $$->key = CODE; }
 
 RawHtml =   < (HtmlComment | HtmlBlockScript | HtmlTag) >
-            {   if (extension(EXT_FILTER_HTML)) {
+            {   if (extension(yy->state, EXT_FILTER_HTML)) {
                     $$ = mk_list(LIST, NULL);
                 } else {
                     $$ = mk_str(yytext);
@@ -862,6 +958,10 @@ RawHtml =   < (HtmlComment | HtmlBlockScript | HtmlTag) >
             }
 
 BlankLine =     Sp Newline
+
+# PEG doesn't support \uXXXX characters, so we encode \ueeee as octal byte sequence
+
+MagicBlankLine =		( &{ extension(yy->state, EXT_KEEP_MAGIC_BLANK_LINES)  } '\356' '\273' '\256')? Sp Newline
 
 Quoted =        '"' (!'"' .)* '"' | '\'' (!'\'' .)* '\''
 HtmlAttribute = (AlphanumericAscii | '-')+ Spnl ('=' Spnl (Quoted | (!'>' Nonspacechar)+))? Spnl
@@ -889,6 +989,16 @@ Indent =            "\t" | "    "
 IndentedLine =      Indent Line
 OptionallyIndentedLine = Indent? Line
 
+CapturingNonindentSpace		=  <NonindentSpace>
+							{
+								if (extension(yy->state, EXT_KEEP_WHITESPACES)) {
+									$$ = mk_str(yytext);
+									$$->key = SPACE;
+								}
+								else
+									$$ = NULL;
+							}
+
 # StartList starts a list data structure that can be added to with cons:
 StartList = &.
             { $$ = NULL; }
@@ -898,17 +1008,17 @@ Line =  RawLine
 RawLine = ( < (!'\r' !'\n' .)* Newline > | < .+ > Eof )
 
 SkipBlock = HtmlBlock
-          | ( !'#' !SetextBottom1 !SetextBottom2 !BlankLine RawLine )+ BlankLine*
-          | BlankLine+
+          | ( !'#' !SetextBottom1 !SetextBottom2 !MagicBlankLine RawLine )+ MagicBlankLine*
+          | MagicBlankLine+
           | RawLine
 
 
 # Syntax extensions
 
-ExtendedSpecialChar = &{ extension(EXT_SMART) } ('.' | '-' | '\'' | '"')
-                    | &{ extension(EXT_NOTES) } ( '^' )
+ExtendedSpecialChar = &{ extension(yy->state, EXT_SMART) } ('.' | '-' | '\'' | '"')
+                    | &{ extension(yy->state, EXT_NOTES) } ( '^' )
 
-Smart = &{ extension(EXT_SMART) }
+Smart = &{ extension(yy->state, EXT_SMART) }
         ( Ellipsis | Dash | SingleQuoted | DoubleQuoted | Apostrophe )
 
 Apostrophe = '\''
@@ -950,10 +1060,10 @@ DoubleQuoted =  DoubleQuoteStart
                 DoubleQuoteEnd
                 { $$ = mk_list(DOUBLEQUOTED, a); }
 
-NoteReference = &{ extension(EXT_NOTES) }
+NoteReference = &{ extension(yy->state, EXT_NOTES) }
                 ref:RawNoteReference
                 {   element *match;
-                    if (find_note(&match, ref->contents.str)) {
+                    if (find_note(yy->state, &match, ref->contents.str)) {
                         $$ = mk_element(NOTE);
                         assert(match->children != NULL);
                         $$->children = match->children;
@@ -970,7 +1080,7 @@ NoteReference = &{ extension(EXT_NOTES) }
 RawNoteReference = ( "[^" | "[#" ) < ( !Newline !']' . )+ > ']'
                    { $$ = mk_str(yytext); }
 
-Glossary =  &{ extension(EXT_NOTES) }
+Glossary =  &{ extension(yy->state, EXT_NOTES) }
             a:StartList
             NonindentSpace ref:RawNoteReference ':' Sp
             "glossary:" Sp (GlossaryTerm { a = cons($$, a); }) 
@@ -994,7 +1104,7 @@ GlossarySortKey = '(' < (!')' !Newline .)* > ')'
     { $$ = mk_str(yytext);
         $$->key = GLOSSARYSORTKEY; }
 
-Note =          &{ extension(EXT_NOTES) }
+Note =          &{ extension(yy->state, EXT_NOTES) }
                 NonindentSpace ref:RawNoteReference ':' Sp
                 a:StartList
                 ( RawNoteBlock { a = cons($$, a); } )
@@ -1007,7 +1117,7 @@ Note =          &{ extension(EXT_NOTES) }
                     $$->contents.str = strdup(ref->contents.str);
                 }
 
-InlineNote =    &{ extension(EXT_NOTES) }
+InlineNote =    &{ extension(yy->state, EXT_NOTES) }
                 "^["
                 a:StartList
                 ( !']' Inline { a = cons($$, a); } )+
@@ -1017,11 +1127,11 @@ InlineNote =    &{ extension(EXT_NOTES) }
 
 Notes =         a:StartList
                 ( (b:Glossary | b:Note)  { a = cons(b, a); } | SkipBlock )*
-                { notes = reverse(a); }
+                { yy->state->notes = reverse(a); }
 
 RawNoteBlock =  a:StartList
-                    ( !BlankLine OptionallyIndentedLine { a = cons($$, a); } )+
-                ( < BlankLine* > { a = cons(mk_str(yytext), a); } )
+                    ( !MagicBlankLine OptionallyIndentedLine { a = cons($$, a); } )+
+                ( < MagicBlankLine* > { a = cons(mk_str(yytext), a); } )
                 {   $$ = mk_str_from_list(a, true);
                     $$->key = RAW;
                 }
@@ -1033,7 +1143,7 @@ CitationReference = CitationReferenceDouble | CitationReferenceSingle
 
 CitationReferenceDouble = !"[]" b:Label < Spnl > !"[]" ref:RawCitationReference
                 {   element *match;
-                    if (find_note(&match, ref->contents.str)) {
+                    if (find_note(yy->state, &match, ref->contents.str)) {
                         /* This citation is specified within the document */
                         $$ = mk_element(CITATION);
                         assert(match->children != NULL);
@@ -1067,7 +1177,7 @@ CitationReferenceDouble = !"[]" b:Label < Spnl > !"[]" ref:RawCitationReference
 CitationReferenceSingle =  (( "[]" Spnl ref:RawCitationReference )
             | ( ref:RawCitationReference < (Spnl "[]")? > ))
                 {   element *match;
-                    if (find_note(&match, ref->contents.str)) {
+                    if (find_note(yy->state, &match, ref->contents.str)) {
                         $$ = mk_element(CITATION);
                         assert(match->children != NULL);
                         $$->children = match->children;
@@ -1087,7 +1197,7 @@ RawCitationReference = "[#" < ( !Newline !']' . )+ > ']'
                    { $$ = mk_str(yytext); }
 
 
-AutoLabels = ( &{ !extension(EXT_COMPATIBILITY) && !extension(EXT_NO_LABELS)}
+AutoLabels = ( &{ !extension(yy->state, EXT_COMPATIBILITY) && !extension(yy->state, EXT_NO_LABELS)}
     a:StartList ( b:Heading
             { 
                 GString *label = g_string_new("");
@@ -1131,7 +1241,7 @@ AutoLabels = ( &{ !extension(EXT_COMPATIBILITY) && !extension(EXT_NO_LABELS)}
                 g_string_free(label,true);
                 free_element_list(c);}
             | SkipBlock )*
-            { labels = a; })
+            { yy->state->labels = a; })
 
 DefinitionList =  a:StartList &(TermLine+ Newline? NonindentSpace ':')
                 (
@@ -1166,14 +1276,16 @@ Definition = (a:StartList b:StartList
                 raw->key = RAW;
                 $$ = mk_list(DEFINITION,raw);
             }
+            
+ULNewline = (&{ extension(yy->state, EXT_KEEP_MAGIC_BLANK_LINES) } BlankLine)?
 
 Table = a:StartList b:StartList (TableCaption { b = cons($$, b);})?
     TableBody { $$->key = TABLEHEAD; a = cons($$, a); }
     (SeparatorLine { append_list($$,a); } )
     (TableBody { a = cons($$, a);} )
-    (BlankLine !TableCaption TableBody { a = cons($$, a); }
-        &(TableCaption | BlankLine) )*
-    ( (TableCaption { b = cons($$, b);} &BlankLine) | &BlankLine)
+    (MagicBlankLine ULNewline !TableCaption TableBody { a = cons($$, a); }
+        &(TableCaption | MagicBlankLine) )*
+    ( (TableCaption { b = cons($$, b);} &(MagicBlankLine ULNewline)) | &(MagicBlankLine ULNewline))
     # Requires blank line to end table "block"
     {
         if (b != NULL) { append_list(b,a); };
@@ -1186,7 +1298,7 @@ TableBody = a:StartList (TableRow {a = cons($$, a);})+
 TableRow = a:StartList
     (!SeparatorLine &(TableLine)
     CellDivider?
-    (TableCell { a = cons($$, a); })+ ) Sp Newline
+    (TableCell { a = cons($$, a); })+ ) Sp Newline ULNewline
     { $$ = mk_list(TABLEROW, a); }
 
 TableLine = (!Newline !CellDivider .)* CellDivider
@@ -1217,19 +1329,25 @@ EmptyCell = Sp CellDivider
 SeparatorLine = a:StartList 
     &(TableLine)
     CellDivider?
-    ( AlignmentCell { a = cons($$, a);})+ Sp Newline
+    ( AlignmentCell { a = cons($$, a);})+ Sp Newline ULNewline
     {
         $$ = mk_str_from_list(a,false);
         $$->key = TABLESEPARATOR;
     }
 
-AlignmentCell = Sp (!CellDivider ( LeftAlignWrap | CenterAlignWrap | RightAlignWrap | LeftAlign | CenterAlign | RightAlign))
+AlignmentCell = Sp (!CellDivider ( NaturalAlignWrap | NaturalAlign | LeftAlignWrap | CenterAlignWrap | RightAlignWrap | LeftAlign | CenterAlign | RightAlign))
     Sp ( CellDivider )?
 
-LeftAlignWrap = ':'? '-'+ '+' &(!'-' !':')
+NaturalAlignWrap = '-'+ '+' &(!'-' !':')
+    { $$ = mk_str("N");}
+
+NaturalAlign = '-'+ &(!'-' !':')
+    { $$ = mk_str("n");}
+
+LeftAlignWrap = ':' '-'+ '+' &(!'-' !':')
     { $$ = mk_str("L");}
 
-LeftAlign = ':'? '-'+ &(!'-' !':')
+LeftAlign = ':' '-'+ &(!'-' !':')
     { $$ = mk_str("l");}
 
 CenterAlignWrap = ':' '-'* '+' ':' &(!'-' !':')
@@ -1247,7 +1365,7 @@ RightAlign = '-'+ ':' &(!'-' !':')
 CellDivider = '|'
 
 TableCaption = b:StartList a:Label
-( c:Label { b = c; b->key = TABLELABEL;})? Sp Newline
+( c:Label { b = c; b->key = TABLELABEL;})? Sp Newline ULNewline
 {
     $$ = a;
     $$->key = TABLECAPTION;
@@ -1278,11 +1396,11 @@ MathSpan = '\\' < (
 
 
 DocForOPML = BOM? a:StartList 
-    ( &{ !extension(EXT_COMPATIBILITY) }
+    ( &{ !extension(yy->state, EXT_COMPATIBILITY) }
        &( MetaDataKey Sp ':' Sp (!Newline)) MetaData
             { a = cons($$, a); })?
     ( OPMLBlock { a = cons($$, a); } )*
-    { parse_result = reverse(a);
+    { yy->state->parse_result = reverse(a);
  }
 
 OPMLBlock =     BlankLine*
@@ -1331,13 +1449,12 @@ MarkdownHtmlAttribute = ("markdown" | "MARKDOWN")
             Spnl '=' Spnl ('"' Spnl)? "1" (Spnl '"')? Spnl
 
 MarkdownHtmlTagOpen = a:StartList '<' {a = cons(mk_str("<"),a);}
-            Spnl <HtmlBlockType> {a = cons(mk_str(yytext),a);} Spnl
+            Spnl <HtmlBlockType> {a = cons(mk_str(yytext),a);}
+			<Spnl> {a = cons(mk_str(yytext),a);}
             (!MarkdownHtmlAttribute
-            <HtmlAttribute> {a = cons(mk_str(" "),a);
-                a = cons(mk_str(yytext),a);})*
-            MarkdownHtmlAttribute
-            (<HtmlAttribute> {a = cons(mk_str(" "),a);
-                a = cons(mk_str(yytext),a);})*
+            <HtmlAttribute> {a = cons(mk_str(yytext),a);})*
+			<MarkdownHtmlAttribute> {a = cons(mk_str(yytext),a);}
+            (<HtmlAttribute> {a = cons(mk_str(yytext),a);})*
             '>' { a = cons(mk_str(">"),a);}
             {
                 $$ = mk_str_from_list(a,false);

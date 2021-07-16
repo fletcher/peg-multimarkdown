@@ -59,7 +59,7 @@ GString* g_string_new(char *startingString)
 {
 	GString* newString = malloc(sizeof(GString));
 
-	if (startingString == NULL) startingString = "";
+	if (startingString == NULL) startingString = "\0";
 
 	size_t startingBufferSize = kStringBufferStartingSize;
 	size_t startingStringSize = strlen(startingString);
