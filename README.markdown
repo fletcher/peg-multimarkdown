@@ -60,7 +60,7 @@ The `make win-installer` command is what I use to package up the BitRock install
 
 You can either download the source from [peg-multimarkdown], or (preferentially) you can use git: 
 
-	git clone git://github.com/fletcher/peg-multimarkdown.git
+	git clone https://github.com/fletcher/peg-multimarkdown.git
 
 You can run the `update_submodules.sh` script to update the submodules if you want to run the test commands, download the sample files and the Support directory, or compile the documentation. 
 
